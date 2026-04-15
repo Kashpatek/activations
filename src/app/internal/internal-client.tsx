@@ -1980,6 +1980,7 @@ function MakeMichelleHappy() {
   const [confetti, setConfetti] = useState(false);
   const [breatheActive, setBreatheActive] = useState(false);
   const [danceMode, setDanceMode] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [streak, setStreak] = useState(() => {
     try { return parseInt(localStorage.getItem("sa-michelle-streak") || "0", 10); } catch { return 0; }
   });
@@ -2024,8 +2025,16 @@ function MakeMichelleHappy() {
       setTimeout(() => setBreatheActive(false), 8000);
     }},
     { emoji: "dancer", label: "Dance Break", action: () => {
-      setDanceMode(true);
-      setTimeout(() => setDanceMode(false), 5000);
+      if (danceMode) {
+        setDanceMode(false);
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+      } else {
+        setDanceMode(true);
+        if (!audioRef.current) { audioRef.current = new Audio("/audio/e85.mp3"); audioRef.current.volume = 0.7; }
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+        audioRef.current.onended = () => setDanceMode(false);
+      }
     }},
     { emoji: "fire", label: "Streak +1", action: () => {
       const next = streak + 1;
@@ -2063,14 +2072,46 @@ function MakeMichelleHappy() {
         </div>
       )}
 
-      {/* Dance mode background pulse */}
+      {/* Dance mode — full club lights */}
       {danceMode && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 150, pointerEvents: "none", animation: "dancePulse 0.4s ease infinite alternate" }}>
-          <div style={{ position: "absolute", inset: 0, background: `radial-gradient(circle at 50% 50%, ${C.violet}15 0%, transparent 60%)` }} />
+        <div style={{ position: "fixed", inset: 0, zIndex: 150, pointerEvents: "none" }}>
+          <div style={{ position: "absolute", inset: 0, animation: "danceFlash 0.35s ease infinite" }} />
+          <div style={{ position: "absolute", top: "-30%", left: "-10%", width: "60vw", height: "60vw", borderRadius: "50%", filter: "blur(80px)", animation: "spotRed 1.2s ease-in-out infinite alternate" }} />
+          <div style={{ position: "absolute", top: "10%", right: "-15%", width: "55vw", height: "55vw", borderRadius: "50%", filter: "blur(80px)", animation: "spotBlue 0.9s ease-in-out infinite alternate-reverse" }} />
+          <div style={{ position: "absolute", bottom: "-20%", left: "20%", width: "50vw", height: "50vw", borderRadius: "50%", filter: "blur(80px)", animation: "spotGreen 1.1s ease-in-out infinite alternate" }} />
+          <div style={{ position: "absolute", top: "30%", left: "40%", width: "40vw", height: "40vw", borderRadius: "50%", filter: "blur(70px)", animation: "spotPink 0.7s ease-in-out infinite alternate-reverse" }} />
+          <div style={{ position: "absolute", inset: 0, animation: "strobeFlicker 0.15s steps(2) infinite" }} />
           <style>{`
-            @keyframes dancePulse {
-              0% { opacity: 0.3; }
-              100% { opacity: 0.8; }
+            @keyframes danceFlash {
+              0%   { background: rgba(247,176,65,0.12); }
+              14%  { background: rgba(224,99,71,0.14); }
+              28%  { background: rgba(144,92,203,0.13); }
+              42%  { background: rgba(11,134,209,0.12); }
+              57%  { background: rgba(46,173,142,0.14); }
+              71%  { background: rgba(255,153,0,0.12); }
+              85%  { background: rgba(74,222,128,0.13); }
+              100% { background: rgba(247,176,65,0.12); }
+            }
+            @keyframes spotRed {
+              0%   { background: radial-gradient(circle, rgba(255,50,80,0.25) 0%, transparent 65%); transform: translate(0,0) scale(1); }
+              100% { background: radial-gradient(circle, rgba(255,100,50,0.3) 0%, transparent 65%); transform: translate(15vw,10vh) scale(1.2); }
+            }
+            @keyframes spotBlue {
+              0%   { background: radial-gradient(circle, rgba(30,100,255,0.25) 0%, transparent 65%); transform: translate(0,0) scale(1); }
+              100% { background: radial-gradient(circle, rgba(100,50,255,0.3) 0%, transparent 65%); transform: translate(-10vw,15vh) scale(1.3); }
+            }
+            @keyframes spotGreen {
+              0%   { background: radial-gradient(circle, rgba(50,255,120,0.2) 0%, transparent 65%); transform: translate(0,0) scale(1); }
+              100% { background: radial-gradient(circle, rgba(38,201,216,0.28) 0%, transparent 65%); transform: translate(10vw,-10vh) scale(1.15); }
+            }
+            @keyframes spotPink {
+              0%   { background: radial-gradient(circle, rgba(255,50,200,0.2) 0%, transparent 65%); transform: translate(0,0) scale(1); }
+              100% { background: radial-gradient(circle, rgba(255,153,0,0.25) 0%, transparent 65%); transform: translate(-8vw,8vh) scale(1.25); }
+            }
+            @keyframes strobeFlicker {
+              0%   { background: rgba(255,255,255,0.06); }
+              50%  { background: transparent; }
+              100% { background: rgba(255,255,255,0.04); }
             }
           `}</style>
         </div>
