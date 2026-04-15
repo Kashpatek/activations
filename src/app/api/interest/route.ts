@@ -1,7 +1,7 @@
 import { writeFile, readFile, mkdir } from "fs/promises";
 import { join } from "path";
 
-const DATA_DIR = join(process.cwd(), ".data");
+const DATA_DIR = join("/tmp", "sa-activations");
 const FILE = join(DATA_DIR, "submissions.json");
 
 async function ensureDir() {
@@ -40,11 +40,8 @@ export async function POST(request: Request) {
     });
     await writeFile(FILE, JSON.stringify(submissions, null, 2));
 
-    console.log(`[INTEREST] New submission from ${name} (${email}) — ${events?.length || 0} events`);
-
     return Response.json({ ok: true });
-  } catch (e) {
-    console.error("[INTEREST] Error:", e);
+  } catch {
     return Response.json({ error: "Failed to save" }, { status: 500 });
   }
 }
