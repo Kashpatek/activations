@@ -1172,7 +1172,149 @@ function OverviewTab({ internal }: { internal: boolean }) {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   TESTIMONIALS
+   INTERNAL-ONLY: ROI CALCULATOR
+   ═══════════════════════════════════════════════════════════ */
+function ROICalculator() {
+  const [selected, setSelected] = useState<Set<string>>(new Set(EVENTS.filter(e => e.status !== "proposed").map(e => e.name)));
+  const toggle = (name: string) => {
+    const next = new Set(selected);
+    next.has(name) ? next.delete(name) : next.add(name);
+    setSelected(next);
+  };
+
+  const count = selected.size;
+  const estAttendees = count * 350;
+  const estDecisionMakers = Math.round(estAttendees * 0.68);
+  const estCountries = Math.min(count * 2 + 4, 18);
+  const estFollowUps = Math.round(estDecisionMakers * 0.35);
+
+  return (
+    <section id="roi" style={{ padding: "80px 32px", maxWidth: 1100, margin: "0 auto" }}>
+      <FadeIn>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <SectionLabel>ROI Projections</SectionLabel>
+          <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+        </div>
+        <SectionTitle>Sponsorship Impact Calculator</SectionTitle>
+        <p style={{ fontFamily: ft, fontSize: 17, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 32 }}>
+          Select events to model projected reach. These are estimates based on our 2025 actuals.
+        </p>
+      </FadeIn>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
+        {/* Event selector */}
+        <FadeIn>
+          <div>
+            <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16, fontWeight: 700 }}>Select Events</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {EVENTS.map(ev => (
+                <div key={ev.name} onClick={() => toggle(ev.name)} style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
+                  background: selected.has(ev.name) ? C.amber + "08" : "rgba(255,255,255,0.02)",
+                  border: `1px solid ${selected.has(ev.name) ? C.amber + "30" : C.glassBorder}`,
+                  borderRadius: 12, cursor: "pointer", transition: "all 0.2s ease",
+                }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${selected.has(ev.name) ? C.amber : C.txd}`, background: selected.has(ev.name) ? C.amber : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", flexShrink: 0 }}>
+                    {selected.has(ev.name) && <span style={{ color: "#060608", fontSize: 11, fontWeight: 900 }}>{"\u2713"}</span>}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: ft, fontSize: 14, fontWeight: 700, color: C.tx }}>{ev.name}</div>
+                    <div style={{ fontFamily: mn, fontSize: 11, color: C.txd }}>{ev.dates}</div>
+                  </div>
+                  <span style={{ fontFamily: mn, fontSize: 9, color: STATUS_CONFIG[ev.status].color }}>{STATUS_CONFIG[ev.status].label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </FadeIn>
+
+        {/* Projected numbers */}
+        <FadeIn delay={100}>
+          <div>
+            <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16, fontWeight: 700 }}>Projected Impact</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {[
+                { label: "Events Activated", value: count.toString(), color: C.amber },
+                { label: "Total Estimated Attendees", value: estAttendees.toLocaleString() + "+", color: C.blue },
+                { label: "Decision-Makers Reached", value: estDecisionMakers.toLocaleString() + "+", color: C.teal },
+                { label: "Countries Represented", value: estCountries.toString(), color: C.violet },
+                { label: "Est. Follow-Up Pipeline", value: estFollowUps.toLocaleString() + " contacts", color: C.coral },
+              ].map(row => (
+                <GlassCard key={row.label} style={{ padding: "20px 24px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontFamily: ft, fontSize: 14, color: C.txm }}>{row.label}</span>
+                    <span style={{ fontFamily: mn, fontSize: 24, fontWeight: 700, color: row.color, letterSpacing: "-1px" }}>{row.value}</span>
+                  </div>
+                </GlassCard>
+              ))}
+            </div>
+
+            <GlassCard style={{ padding: "20px 24px", marginTop: 16, background: C.amber + "06", border: `1px solid ${C.amber}20` }}>
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8, fontWeight: 700 }}>Cost Efficiency vs Traditional</div>
+              <div style={{ fontFamily: ft, fontSize: 14, color: C.txm, lineHeight: 1.6 }}>
+                Standard conference sponsorship: <span style={{ color: C.tx, fontWeight: 700 }}>~$150-300 per lead</span><br />
+                SemiAnalysis activations: <span style={{ color: C.amber, fontWeight: 700 }}>~$40-80 per decision-maker</span><br />
+                <span style={{ fontFamily: mn, fontSize: 12, color: C.teal, marginTop: 4, display: "block" }}>3-5x more efficient + higher seniority</span>
+              </div>
+            </GlassCard>
+          </div>
+        </FadeIn>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL-ONLY: COMPARISON TABLE
+   ═══════════════════════════════════════════════════════════ */
+function ComparisonTable() {
+  const rows = [
+    { metric: "Avg. Attendee Seniority", sa: "78% Director+", trad: "~30% Director+", winner: "sa" },
+    { metric: "Cost per Decision-Maker", sa: "$40-80", trad: "$150-300", winner: "sa" },
+    { metric: "Format", sa: "Curated experiences (dinners, cruises, HHs)", trad: "Booth + badge scan", winner: "sa" },
+    { metric: "Follow-Up Quality", sa: "Warm intros, shared experience", trad: "Cold lead list", winner: "sa" },
+    { metric: "Content Amplification", sa: "200K newsletter + 1M YT views/mo", trad: "Logo on website", winner: "sa" },
+    { metric: "Brand Association", sa: "Trusted industry authority", trad: "One of many sponsors", winner: "sa" },
+    { metric: "Attendee Return Rate", sa: "94% would attend again", trad: "~40% industry avg", winner: "sa" },
+    { metric: "Geographic Reach", sa: "3 continents, 14+ countries", trad: "Single venue", winner: "sa" },
+  ];
+
+  return (
+    <section style={{ padding: "80px 32px", background: "rgba(255,255,255,0.01)" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <SectionLabel>Competitive Edge</SectionLabel>
+            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          </div>
+          <SectionTitle>SA Events vs. Traditional Sponsorship</SectionTitle>
+        </FadeIn>
+
+        <FadeIn delay={100}>
+          <GlassCard style={{ overflow: "hidden", marginTop: 32 }}>
+            {/* Header */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: `1px solid ${C.glassBorder}`, padding: "16px 24px", background: "rgba(255,255,255,0.02)" }}>
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase" }}>Metric</div>
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "1.5px", textTransform: "uppercase" }}>SemiAnalysis Events</div>
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase" }}>Traditional Sponsorship</div>
+            </div>
+            {/* Rows */}
+            {rows.map((r, i) => (
+              <div key={r.metric} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: i < rows.length - 1 ? `1px solid ${C.glassBorder}` : "none", padding: "14px 24px", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
+                <div style={{ fontFamily: ft, fontSize: 13, color: C.txm }}>{r.metric}</div>
+                <div style={{ fontFamily: ft, fontSize: 13, color: C.amber, fontWeight: 700 }}>{r.sa}</div>
+                <div style={{ fontFamily: ft, fontSize: 13, color: C.txd }}>{r.trad}</div>
+              </div>
+            ))}
+          </GlassCard>
+        </FadeIn>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TESTIMONIALS (both views)
    ═══════════════════════════════════════════════════════════ */
 function Testimonials() {
   const quotes = [
@@ -1189,6 +1331,7 @@ function Testimonials() {
           <SectionLabel>What Attendees Say</SectionLabel>
           <SectionTitle>From the People in the Room</SectionTitle>
         </FadeIn>
+
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16, marginTop: 32 }}>
           {quotes.map((q, i) => (
             <FadeIn key={i} delay={i * 80}>
@@ -1209,12 +1352,17 @@ function Testimonials() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   INTEREST FORM
+   INTEREST FORM (AWS view CTA replacement)
    ═══════════════════════════════════════════════════════════ */
 function InterestForm() {
   const [form, setForm] = useState({ name: "", email: "", role: "", events: new Set<string>(), notes: "" });
   const [submitted, setSubmitted] = useState(false);
-  const toggleEvent = (name: string) => { const next = new Set(form.events); next.has(name) ? next.delete(name) : next.add(name); setForm({ ...form, events: next }); };
+
+  const toggleEvent = (name: string) => {
+    const next = new Set(form.events);
+    next.has(name) ? next.delete(name) : next.add(name);
+    setForm({ ...form, events: next });
+  };
 
   if (submitted) {
     return (
@@ -1223,7 +1371,7 @@ function InterestForm() {
           <div style={{ maxWidth: 600, margin: "0 auto" }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>{"\u2713"}</div>
             <h2 style={{ fontFamily: gf, fontSize: 36, fontWeight: 900, color: "#4ADE80", letterSpacing: "-1px", marginBottom: 12 }}>Interest Received</h2>
-            <p style={{ fontFamily: ft, fontSize: 17, color: C.txm, lineHeight: 1.7 }}>Thank you! We will reach out within 24 hours to discuss next steps.</p>
+            <p style={{ fontFamily: ft, fontSize: 17, color: C.txm, lineHeight: 1.7 }}>Thank you! Michelle will reach out within 24 hours to discuss next steps.</p>
           </div>
         </FadeIn>
       </section>
@@ -1237,36 +1385,60 @@ function InterestForm() {
           <div style={{ textAlign: "center", marginBottom: 48 }}>
             <SectionLabel>Get Started</SectionLabel>
             <h2 style={{ fontFamily: gf, fontSize: 48, fontWeight: 900, background: `linear-gradient(135deg, #fff 0%, ${C.amber} 60%, ${C.blue} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "-1.5px", marginBottom: 16, lineHeight: 1.1 }}>
-              Let{"'"}s Build This<br />Together.
+              Let's Build This<br />Together.
             </h2>
             <p style={{ fontFamily: ft, fontSize: 17, color: C.txm, lineHeight: 1.7, maxWidth: 520, margin: "0 auto" }}>
-              Select the events you{"'"}re interested in and we{"'"}ll put together a custom partnership proposal.
+              Select the events you're interested in and we'll put together a custom partnership proposal.
             </p>
           </div>
         </FadeIn>
+
         <FadeIn delay={100}>
           <GlassCard style={{ padding: "32px" }}>
-            <div data-grid-responsive style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-              {[{ key: "name", label: "Name", placeholder: "Your name" }, { key: "email", label: "Email", placeholder: "you@company.com" }].map(f => (
+            {/* Name + Email */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+              {[
+                { key: "name", label: "Name", placeholder: "Your name" },
+                { key: "email", label: "Email", placeholder: "you@company.com" },
+              ].map(f => (
                 <div key={f.key}>
                   <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>{f.label}</div>
-                  <input value={(form as any)[f.key]} onChange={e => setForm({ ...form, [f.key]: e.target.value })} placeholder={f.placeholder}
+                  <input
+                    value={(form as any)[f.key]}
+                    onChange={e => setForm({ ...form, [f.key]: e.target.value })}
+                    placeholder={f.placeholder}
                     style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 10, color: C.tx, fontFamily: ft, fontSize: 14, outline: "none", boxSizing: "border-box" }}
-                    onFocus={e => { e.target.style.borderColor = C.amber; }} onBlur={e => { e.target.style.borderColor = C.glassBorder; }} />
+                    onFocus={e => { e.target.style.borderColor = C.amber; }}
+                    onBlur={e => { e.target.style.borderColor = C.glassBorder; }}
+                  />
                 </div>
               ))}
             </div>
+
+            {/* Role */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>Role / Title</div>
-              <input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} placeholder="e.g. Head of Marketing, AWS"
+              <input
+                value={form.role}
+                onChange={e => setForm({ ...form, role: e.target.value })}
+                placeholder="e.g. Head of Marketing, AWS"
                 style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 10, color: C.tx, fontFamily: ft, fontSize: 14, outline: "none", boxSizing: "border-box" }}
-                onFocus={e => { e.target.style.borderColor = C.amber; }} onBlur={e => { e.target.style.borderColor = C.glassBorder; }} />
+                onFocus={e => { e.target.style.borderColor = C.amber; }}
+                onBlur={e => { e.target.style.borderColor = C.glassBorder; }}
+              />
             </div>
+
+            {/* Event selection */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 10, fontWeight: 700 }}>Events of Interest</div>
-              <div data-grid-responsive style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {EVENTS.map(ev => (
-                  <div key={ev.name} onClick={() => toggleEvent(ev.name)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: form.events.has(ev.name) ? C.amber + "08" : "rgba(255,255,255,0.02)", border: `1px solid ${form.events.has(ev.name) ? C.amber + "30" : C.glassBorder}`, borderRadius: 10, cursor: "pointer", transition: "all 0.2s ease" }}>
+                  <div key={ev.name} onClick={() => toggleEvent(ev.name)} style={{
+                    display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
+                    background: form.events.has(ev.name) ? C.amber + "08" : "rgba(255,255,255,0.02)",
+                    border: `1px solid ${form.events.has(ev.name) ? C.amber + "30" : C.glassBorder}`,
+                    borderRadius: 10, cursor: "pointer", transition: "all 0.2s ease",
+                  }}>
                     <div style={{ width: 16, height: 16, borderRadius: 4, border: `2px solid ${form.events.has(ev.name) ? C.amber : C.txd}`, background: form.events.has(ev.name) ? C.amber : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s ease" }}>
                       {form.events.has(ev.name) && <span style={{ color: "#060608", fontSize: 9, fontWeight: 900 }}>{"\u2713"}</span>}
                     </div>
@@ -1278,16 +1450,43 @@ function InterestForm() {
                 ))}
               </div>
             </div>
+
+            {/* Notes */}
             <div style={{ marginBottom: 24 }}>
               <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>Anything Else?</div>
-              <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Budget range, specific goals, questions..." rows={3}
+              <textarea
+                value={form.notes}
+                onChange={e => setForm({ ...form, notes: e.target.value })}
+                placeholder="Budget range, specific goals, questions..."
+                rows={3}
                 style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 10, color: C.tx, fontFamily: ft, fontSize: 14, outline: "none", boxSizing: "border-box", resize: "vertical" }}
-                onFocus={e => { e.target.style.borderColor = C.amber; }} onBlur={e => { e.target.style.borderColor = C.glassBorder; }} />
+                onFocus={e => { e.target.style.borderColor = C.amber; }}
+                onBlur={e => { e.target.style.borderColor = C.glassBorder; }}
+              />
             </div>
-            <button onClick={async () => {
-              if (!form.name || !form.email) return;
-              try { const res = await fetch("/api/interest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, events: Array.from(form.events) }) }); if (!res.ok) throw new Error("Failed"); setSubmitted(true); } catch { setSubmitted(true); }
-            }} style={{ width: "100%", fontFamily: ft, fontSize: 16, fontWeight: 800, color: "#fff", background: `linear-gradient(135deg, ${C.amber}, #E8A020)`, padding: "16px", borderRadius: 12, border: "none", cursor: "pointer", boxShadow: `0 4px 30px ${C.amber}30` }}>
+
+            <button
+              onClick={async () => {
+                if (!form.name || !form.email) return;
+                try {
+                  const res = await fetch("/api/interest", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ ...form, events: Array.from(form.events) }),
+                  });
+                  if (!res.ok) throw new Error("Failed");
+                  setSubmitted(true);
+                } catch {
+                  setSubmitted(true);
+                }
+              }}
+              style={{
+                width: "100%", fontFamily: ft, fontSize: 16, fontWeight: 800, color: "#fff",
+                background: `linear-gradient(135deg, ${C.amber}, #E8A020)`,
+                padding: "16px", borderRadius: 12, border: "none", cursor: "pointer",
+                boxShadow: `0 4px 30px ${C.amber}30`, transition: "all 0.2s ease",
+              }}
+            >
               Submit Interest — {form.events.size} Event{form.events.size !== 1 ? "s" : ""} Selected
             </button>
           </GlassCard>
@@ -1298,15 +1497,1098 @@ function InterestForm() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   MAIN EXPORT — PUBLIC ONLY (no internal code in this bundle)
+   PASSCODE GATE
    ═══════════════════════════════════════════════════════════ */
-const TABS_PUBLIC = [
+function PasscodeGate({ onUnlock }: { onUnlock: () => void }) {
+  const [code, setCode] = useState("");
+  const [shake, setShake] = useState(false);
+
+  const handleSubmit = () => {
+    if (code.toLowerCase().trim() === "transistor") {
+      localStorage.setItem("sa-internal", "1");
+      onUnlock();
+    } else {
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      setCode("");
+    }
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 200,
+      background: C.bg,
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }}>
+      <GradientMesh />
+      <div style={{ position: "relative", zIndex: 1, textAlign: "center", padding: 32, maxWidth: 400 }}>
+        <div style={{ fontFamily: gf, fontSize: 28, fontWeight: 900, color: C.tx, marginBottom: 8, letterSpacing: "-1px" }}>Internal Access</div>
+        <p style={{ fontFamily: ft, fontSize: 14, color: C.txm, marginBottom: 32, lineHeight: 1.6 }}>Enter the team passcode to unlock the internal view with ROI projections, comparison data, and analytics.</p>
+        <div style={{
+          transform: shake ? "translateX(-8px)" : "translateX(0)",
+          animation: shake ? "shake 0.4s ease" : "none",
+          transition: "transform 0.1s ease",
+        }}>
+          <input
+            type="password"
+            value={code}
+            onChange={e => setCode(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") handleSubmit(); }}
+            placeholder="Passcode"
+            autoFocus
+            style={{
+              width: "100%", padding: "14px 18px", background: "rgba(255,255,255,0.03)",
+              border: `1px solid ${shake ? C.coral : C.glassBorder}`, borderRadius: 12,
+              color: C.tx, fontFamily: mn, fontSize: 16, outline: "none",
+              textAlign: "center", letterSpacing: "4px",
+              transition: "border-color 0.3s ease",
+            }}
+          />
+        </div>
+        <button
+          onClick={handleSubmit}
+          style={{
+            width: "100%", marginTop: 16, fontFamily: ft, fontSize: 14, fontWeight: 800,
+            color: "#060608", background: `linear-gradient(135deg, ${C.amber}, #E8A020)`,
+            padding: "14px", borderRadius: 12, border: "none", cursor: "pointer",
+            boxShadow: `0 4px 20px ${C.amber}30`,
+          }}
+        >
+          Unlock
+        </button>
+        <div style={{ fontFamily: mn, fontSize: 11, color: C.txd, marginTop: 24 }}>
+          Not on the team? <span onClick={onUnlock} style={{ color: C.amber, cursor: "pointer", textDecoration: "underline" }}>Continue as visitor</span>
+        </div>
+      </div>
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-12px); }
+          50% { transform: translateX(12px); }
+          75% { transform: translateX(-6px); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MAIN EXPORT — TAB CONTROLLER + AUTH
+   ═══════════════════════════════════════════════════════════ */
+const TABS_AWS = [
   { key: "overview", label: "Overview" },
   { key: "calendar", label: "Calendar" },
 ];
+const TABS_INTERNAL = [
+  { key: "overview", label: "Overview" },
+  { key: "calendar", label: "Calendar" },
+  { key: "analytics", label: "Analytics" },
+  { key: "ops", label: "Ops" },
+];
 
-export default function EventsClient() {
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL: STATUS TOGGLE ADMIN
+   ═══════════════════════════════════════════════════════════ */
+function StatusAdmin() {
+  const [statuses, setStatuses] = useState<Record<string, ActivationStatus>>(() => {
+    const saved: Record<string, ActivationStatus> = {};
+    EVENTS.forEach(e => { saved[e.name] = e.status; });
+    return saved;
+  });
+  const [saved, setSaved] = useState(false);
+
+  const cycle = (name: string) => {
+    const order: ActivationStatus[] = ["proposed", "interested", "activated"];
+    const cur = statuses[name];
+    const next = order[(order.indexOf(cur) + 1) % order.length];
+    setStatuses({ ...statuses, [name]: next });
+    setSaved(false);
+  };
+
+  const handleSave = () => {
+    // Update the EVENTS array in memory (persists for session)
+    EVENTS.forEach(ev => {
+      if (statuses[ev.name]) (ev as any).status = statuses[ev.name];
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <section style={{ padding: "80px 32px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <SectionLabel>Event Status Manager</SectionLabel>
+            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          </div>
+          <SectionTitle>Toggle Activation Status</SectionTitle>
+          <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 32 }}>
+            Click a status badge to cycle through: Proposed {"\u2192"} AWS Interested {"\u2192"} AWS Activated. Hit save to apply across the site for this session.
+          </p>
+        </FadeIn>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
+          {EVENTS.map(ev => {
+            const st = STATUS_CONFIG[statuses[ev.name]];
+            return (
+              <FadeIn key={ev.name}>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 16, padding: "16px 20px",
+                  background: C.glass, backdropFilter: "blur(20px)",
+                  border: `1px solid ${C.glassBorder}`, borderRadius: 14,
+                }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.glassBorder}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+                    <img src={ev.logo} alt={ev.name} style={{ width: 26, height: 26, objectFit: "contain", filter: ev.logo.endsWith(".svg") ? "brightness(0) invert(1)" : "none" }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: ft, fontSize: 15, fontWeight: 700, color: C.tx }}>{ev.name}</div>
+                    <div style={{ fontFamily: mn, fontSize: 11, color: C.txd }}>{ev.dates} — {ev.location}</div>
+                  </div>
+                  <button
+                    onClick={() => cycle(ev.name)}
+                    style={{
+                      fontFamily: mn, fontSize: 10, fontWeight: 700,
+                      color: st.color, background: st.bg,
+                      border: `1px solid ${st.color}30`,
+                      borderRadius: 20, padding: "6px 16px",
+                      cursor: "pointer", transition: "all 0.2s ease",
+                      display: "flex", alignItems: "center", gap: 6,
+                    }}
+                  >
+                    <span style={{ fontSize: 12 }}>{st.icon}</span> {st.label}
+                  </button>
+                </div>
+              </FadeIn>
+            );
+          })}
+        </div>
+
+        <button
+          onClick={handleSave}
+          style={{
+            fontFamily: ft, fontSize: 14, fontWeight: 800,
+            color: saved ? "#060608" : "#fff",
+            background: saved ? "linear-gradient(135deg, #4ADE80, #22C55E)" : `linear-gradient(135deg, ${C.amber}, #E8A020)`,
+            padding: "14px 40px", borderRadius: 12, border: "none", cursor: "pointer",
+            boxShadow: saved ? "0 4px 20px rgba(74,222,128,0.3)" : `0 4px 20px ${C.amber}30`,
+            transition: "all 0.3s ease",
+          }}
+        >
+          {saved ? "Saved — statuses updated across the site" : "Save Changes"}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL: MICHELLE'S TOOLKIT
+   ═══════════════════════════════════════════════════════════ */
+function MichelleToolkit() {
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const copy = (key: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  const templates = [
+    {
+      key: "initial-outreach",
+      title: "Initial Outreach to AWS",
+      subject: "SemiAnalysis x AWS — 2026 Event Partnership Proposal",
+      body: `Hi [Name],
+
+I'm reaching out from SemiAnalysis to discuss a strategic event partnership with AWS for our 2026 activation calendar.
+
+We're planning eight high-impact activations across three continents — targeting the AI infrastructure decision-makers that matter most to AWS. From intimate happy hours at MLSys to premium boat cruises at NeurIPS (our 2025 cruise with SAIL drew 750 attendees, 680 decision-makers), our events consistently deliver the highest-quality audience in the AI infrastructure space.
+
+I've put together a dedicated site with the full calendar, activation details, and partnership tiers:
+[SITE URL]
+
+Would love to set up 20 minutes to walk through it with you. What does your calendar look like next week?
+
+Best,
+Michelle
+SemiAnalysis`,
+    },
+    {
+      key: "follow-up",
+      title: "Follow-Up After Site Visit",
+      subject: "Re: SemiAnalysis x AWS — Next Steps",
+      body: `Hi [Name],
+
+Following up on the event partnership proposal I shared — I noticed you've had a chance to look through the site. Wanted to see if any events stood out.
+
+A few highlights I'd love to discuss:
+
+- Computex AI Wonderland Banquet (Jun 2-5, Taipei) — venue is already booked, VIP capacity is limited
+- NeurIPS Boat Cruise (Dec 6-12, Sydney) — first time in APAC, building on our 750-person 2025 cruise
+- ICML Research Event (Jul 6-11, Seoul) — special format to deepen AWS's research community presence
+
+We're flexible on partnership structure — from anchoring 1-2 flagship events to a full-season Premier package across all eight.
+
+Happy to jump on a call whenever works. What questions can I answer?
+
+Best,
+Michelle`,
+    },
+    {
+      key: "post-meeting",
+      title: "Post-Meeting Recap",
+      subject: "SemiAnalysis x AWS — Meeting Recap & Next Steps",
+      body: `Hi [Name],
+
+Great speaking with you today! Here's a quick recap of what we discussed:
+
+Events of Interest:
+- [Event 1] — [notes]
+- [Event 2] — [notes]
+- [Event 3] — [notes]
+
+Partnership Tier: [Select/Premier/Flagship]
+
+Next Steps:
+1. [Action item] — [Owner] — [Date]
+2. [Action item] — [Owner] — [Date]
+3. [Action item] — [Owner] — [Date]
+
+I've updated the partnership site with the events we discussed marked as "AWS Interested." You can revisit it anytime:
+[SITE URL]
+
+Looking forward to building this together.
+
+Best,
+Michelle`,
+    },
+    {
+      key: "activation-confirmed",
+      title: "Activation Confirmed",
+      subject: "Confirmed: AWS x SemiAnalysis — [Event Name] Activation",
+      body: `Hi [Name],
+
+Thrilled to confirm AWS as [partnership tier] for [Event Name] on [dates] in [location]!
+
+Here's what happens next:
+
+Week 1-2: Partnership alignment call — branding guidelines, goals, KPIs
+Week 3-4: Creative kickoff — co-branded materials, invite design, venue walkthrough
+Week 5+: Audience building begins — newsletter features, targeted outreach, social campaign
+
+I'll send a calendar invite for our alignment call this week. In the meantime, please send over:
+- AWS logo files (vector preferred)
+- Brand guidelines doc
+- Key contacts for creative and logistics
+
+The activation site has been updated to show this event as "AWS Activated":
+[SITE URL]
+
+Let's make this incredible.
+
+Michelle`,
+    },
+    {
+      key: "talking-points",
+      title: "Talking Points for AWS Call",
+      subject: "",
+      body: `TALKING POINTS — AWS PARTNERSHIP CALL
+
+WHY NOW:
+- 2026 calendar is the most ambitious yet — 8 events, 3 continents
+- NeurIPS moving to Sydney = massive APAC opportunity
+- AI infrastructure spending is accelerating — AWS needs presence where decisions happen
+- Early commitment = best event placement and VIP curation
+
+OUR EDGE:
+- 200K+ newsletter subscribers — the buyer's table reads us
+- NeurIPS 2025 proof point: 750 attendees, 680 decision-makers, 38% academia, 18% Big Tech
+- 94% return rate — people don't just come once, they come back
+- Cost per decision-maker: $40-80 vs $150-300 for traditional sponsorship
+
+OBJECTION HANDLING:
+"We already sponsor conferences directly"
+→ Our events are the event-within-the-event. The people at our cruise are the same people who skip the expo floor. We reach them in a context where they're open to conversation, not scanning badges.
+
+"Budget is tight this year"
+→ Flexible tiers — Select (2-3 events) is a fraction of a single booth at re:Invent. And the audience quality is 3-5x higher.
+
+"How do we measure ROI?"
+→ Full post-event reporting: attendee list with company/role, seniority breakdown, follow-up pipeline, and sentiment survey. We measure what matters — conversations, not impressions.
+
+ASK:
+- Start with Premier tier (full season) as the recommendation
+- Fallback: Flagship tier anchoring NeurIPS + one more
+- Minimum: Select tier with 3 priority events`,
+    },
+    {
+      key: "submissions-check",
+      title: "View Form Submissions",
+      subject: "",
+      body: `To view all interest form submissions, visit:
+[SITE URL]/api/interest
+
+This returns a JSON array of all submissions with name, email, role, selected events, notes, and timestamp.`,
+    },
+  ];
+
+  return (
+    <section style={{ padding: "80px 32px", background: "rgba(255,255,255,0.01)" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <SectionLabel>Michelle's Toolkit</SectionLabel>
+            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          </div>
+          <SectionTitle>Email Templates & Talking Points</SectionTitle>
+          <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 32 }}>
+            Ready-to-use templates for every stage of the AWS conversation. Click to copy, then paste and customize.
+          </p>
+        </FadeIn>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {templates.map((t, i) => (
+            <FadeIn key={t.key} delay={i * 50}>
+              <TemplateCard template={t} copied={copied === t.key} onCopy={() => copy(t.key, t.subject ? `Subject: ${t.subject}\n\n${t.body}` : t.body)} />
+            </FadeIn>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TemplateCard({ template, copied, onCopy }: { template: { key: string; title: string; subject: string; body: string }; copied: boolean; onCopy: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div style={{
+      background: C.glass, backdropFilter: "blur(20px)",
+      border: `1px solid ${expanded ? C.amber + "30" : C.glassBorder}`,
+      borderRadius: 16, overflow: "hidden", transition: "all 0.3s ease",
+    }}>
+      <div
+        onClick={() => setExpanded(!expanded)}
+        style={{ padding: "20px 24px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+      >
+        <div>
+          <div style={{ fontFamily: ft, fontSize: 16, fontWeight: 700, color: C.tx }}>{template.title}</div>
+          {template.subject && <div style={{ fontFamily: mn, fontSize: 11, color: C.txd, marginTop: 2 }}>Subject: {template.subject}</div>}
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button
+            onClick={(e) => { e.stopPropagation(); onCopy(); }}
+            style={{
+              fontFamily: mn, fontSize: 10, fontWeight: 700,
+              color: copied ? "#4ADE80" : C.amber,
+              background: copied ? "#4ADE8015" : C.amber + "10",
+              border: `1px solid ${copied ? "#4ADE8030" : C.amber + "30"}`,
+              borderRadius: 8, padding: "6px 14px", cursor: "pointer", transition: "all 0.2s ease",
+            }}
+          >
+            {copied ? "Copied!" : "Copy"}
+          </button>
+          <span style={{ color: C.txm, fontSize: 14, transform: expanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>{"\u25BC"}</span>
+        </div>
+      </div>
+
+      <div style={{
+        maxHeight: expanded ? 800 : 0, opacity: expanded ? 1 : 0,
+        overflow: "hidden", transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+      }}>
+        <div style={{ padding: "0 24px 24px", borderTop: `1px solid ${C.glassBorder}` }}>
+          <pre style={{
+            fontFamily: mn, fontSize: 12, color: C.txm, lineHeight: 1.7,
+            whiteSpace: "pre-wrap", wordBreak: "break-word",
+            marginTop: 16, padding: 20,
+            background: "rgba(0,0,0,0.3)", borderRadius: 12,
+            border: `1px solid ${C.glassBorder}`,
+          }}>
+            {template.body}
+          </pre>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL: SUBMISSIONS VIEWER
+   ═══════════════════════════════════════════════════════════ */
+function SubmissionsViewer() {
+  const [subs, setSubs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/interest").then(r => r.json()).then(d => { setSubs(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false));
+  }, []);
+
+  return (
+    <section style={{ padding: "80px 32px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <SectionLabel>Inbound Interest</SectionLabel>
+            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          </div>
+          <SectionTitle>Form Submissions</SectionTitle>
+        </FadeIn>
+
+        {loading ? (
+          <div style={{ fontFamily: mn, fontSize: 13, color: C.txd, padding: "40px 0" }}>Loading submissions...</div>
+        ) : subs.length === 0 ? (
+          <GlassCard style={{ padding: "40px 24px", textAlign: "center" }}>
+            <div style={{ fontFamily: ft, fontSize: 16, color: C.txm }}>No submissions yet. When AWS fills out the interest form, they'll appear here.</div>
+          </GlassCard>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {subs.map((s, i) => (
+              <FadeIn key={i}>
+                <GlassCard style={{ padding: "20px 24px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                    <div>
+                      <div style={{ fontFamily: ft, fontSize: 16, fontWeight: 700, color: C.tx }}>{s.name}</div>
+                      <div style={{ fontFamily: mn, fontSize: 12, color: C.amber }}>{s.email}</div>
+                      {s.role && <div style={{ fontFamily: ft, fontSize: 13, color: C.txm, marginTop: 2 }}>{s.role}</div>}
+                    </div>
+                    <div style={{ fontFamily: mn, fontSize: 10, color: C.txd }}>{s.submittedAt ? new Date(s.submittedAt).toLocaleDateString() : ""}</div>
+                  </div>
+                  {s.events?.length > 0 && (
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                      {s.events.map((e: string) => (
+                        <span key={e} style={{ fontFamily: mn, fontSize: 10, color: C.amber, background: C.amber + "10", border: `1px solid ${C.amber}25`, borderRadius: 8, padding: "3px 10px" }}>{e}</span>
+                      ))}
+                    </div>
+                  )}
+                  {s.notes && <div style={{ fontFamily: ft, fontSize: 13, color: C.txm, marginTop: 10, lineHeight: 1.5, fontStyle: "italic" }}>"{s.notes}"</div>}
+                </GlassCard>
+              </FadeIn>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL: MAKE MICHELLE HAPPY
+   ═══════════════════════════════════════════════════════════ */
+function MakeMichelleHappy() {
+  const [hype, setHype] = useState("");
+  const [confetti, setConfetti] = useState(false);
+  const [breatheActive, setBreatheActive] = useState(false);
+  const [danceMode, setDanceMode] = useState(false);
+  const [streak, setStreak] = useState(() => {
+    try { return parseInt(localStorage.getItem("sa-michelle-streak") || "0", 10); } catch { return 0; }
+  });
+
+  const compliments = [
+    "Michelle, you're literally the reason this partnership exists.",
+    "The events industry doesn't deserve you. But AWS does.",
+    "750 people on a boat? That was YOUR doing.",
+    "You turn cold emails into signed contracts. That's a superpower.",
+    "Every event you touch turns into the must-attend of the conference.",
+    "You could sell ice to a penguin and the penguin would say thank you.",
+    "The AI infrastructure community is better because you're in it.",
+    "You don't network. You build constellations of people.",
+    "Three continents, eight events, one Michelle. The math checks out.",
+    "AWS should be thanking YOU for letting them partner.",
+    "Fun fact: the gradient glass on this site was inspired by your energy.",
+    "You're not just closing deals — you're creating experiences people remember for years.",
+    "Somewhere, a VP of Engineering is telling their team about your event. Right now.",
+    "If events were an Olympic sport, you'd have the gold and the world record.",
+    "You make 'herding cats' look like a choreographed ballet.",
+    "SemiAnalysis has 200K subscribers. They should all know your name.",
+    "The Computex banquet? Legendary. That was you.",
+    "You've probably generated more pipeline than most SDR teams combined.",
+    "Your Slack messages should come with a standing ovation.",
+    "When you walk into a conference, the conference gets better.",
+  ];
+
+  const miniGames = [
+    { emoji: "8ball", label: "Magic 8-Ball", action: () => {
+      const answers = ["AWS will say yes", "NeurIPS boat cruise will be ICONIC", "The budget will get approved", "Michelle energy is unstoppable today", "Outlook: literally legendary", "Signs point to a signed contract", "The vibes are immaculate", "Absolutely — and they'll thank you for it"];
+      setHype(answers[Math.floor(Math.random() * answers.length)]);
+    }},
+    { emoji: "sparkles", label: "Hype Me Up", action: () => {
+      setHype(compliments[Math.floor(Math.random() * compliments.length)]);
+    }},
+    { emoji: "confetti", label: "Confetti", action: () => {
+      setConfetti(true);
+      setTimeout(() => setConfetti(false), 3000);
+    }},
+    { emoji: "wind", label: "Breathe", action: () => {
+      setBreatheActive(true);
+      setTimeout(() => setBreatheActive(false), 8000);
+    }},
+    { emoji: "dancer", label: "Dance Break", action: () => {
+      setDanceMode(true);
+      setTimeout(() => setDanceMode(false), 5000);
+    }},
+    { emoji: "fire", label: "Streak +1", action: () => {
+      const next = streak + 1;
+      setStreak(next);
+      localStorage.setItem("sa-michelle-streak", String(next));
+      setHype(`Streak: ${next} day${next > 1 ? "s" : ""} of being incredible`);
+    }},
+  ];
+
+  return (
+    <section style={{ padding: "80px 32px", position: "relative", overflow: "hidden" }}>
+      {/* Confetti */}
+      {confetti && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, pointerEvents: "none" }}>
+          {Array.from({ length: 60 }, (_, i) => (
+            <div key={i} style={{
+              position: "absolute",
+              left: Math.random() * 100 + "%",
+              top: -20,
+              width: 8 + Math.random() * 8,
+              height: 8 + Math.random() * 8,
+              background: [C.amber, C.blue, C.coral, C.violet, C.teal, "#4ADE80", C.aws][i % 7],
+              borderRadius: Math.random() > 0.5 ? "50%" : "2px",
+              animation: `confettiFall ${2 + Math.random() * 2}s ease-out forwards`,
+              animationDelay: Math.random() * 0.5 + "s",
+              opacity: 0.9,
+            }} />
+          ))}
+          <style>{`
+            @keyframes confettiFall {
+              0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+              100% { transform: translateY(100vh) rotate(${360 + Math.random() * 360}deg); opacity: 0; }
+            }
+          `}</style>
+        </div>
+      )}
+
+      {/* Dance mode background pulse */}
+      {danceMode && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 150, pointerEvents: "none", animation: "dancePulse 0.4s ease infinite alternate" }}>
+          <div style={{ position: "absolute", inset: 0, background: `radial-gradient(circle at 50% 50%, ${C.violet}15 0%, transparent 60%)` }} />
+          <style>{`
+            @keyframes dancePulse {
+              0% { opacity: 0.3; }
+              100% { opacity: 0.8; }
+            }
+          `}</style>
+        </div>
+      )}
+
+      <div style={{ maxWidth: 800, margin: "0 auto", position: "relative", zIndex: 1 }}>
+        <FadeIn>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>{"\u2728"}</div>
+            <h2 style={{ fontFamily: gf, fontSize: 36, fontWeight: 900, background: `linear-gradient(135deg, ${C.amber} 0%, ${C.coral} 40%, ${C.violet} 70%, ${C.blue} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "-1px", marginBottom: 8 }}>
+              Make Michelle Happy
+            </h2>
+            <p style={{ fontFamily: ft, fontSize: 15, color: C.txm }}>Because you deserve a break. And a compliment. And confetti.</p>
+            {streak > 0 && <div style={{ fontFamily: mn, fontSize: 12, color: C.amber, marginTop: 8 }}>Current streak: {streak} day{streak > 1 ? "s" : ""} of being incredible</div>}
+          </div>
+        </FadeIn>
+
+        {/* Action buttons */}
+        <FadeIn delay={100}>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 32 }}>
+            {miniGames.map(g => (
+              <button key={g.label} onClick={g.action} style={{
+                fontFamily: ft, fontSize: 13, fontWeight: 700, color: C.tx,
+                background: C.glass, backdropFilter: "blur(20px)",
+                border: `1px solid ${C.glassBorder}`, borderRadius: 14,
+                padding: "14px 20px", cursor: "pointer", transition: "all 0.2s ease",
+                display: "flex", alignItems: "center", gap: 8,
+              }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = C.amber + "40"; e.currentTarget.style.boxShadow = `0 4px 20px ${C.amber}15`; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.glassBorder; e.currentTarget.style.boxShadow = "none"; }}
+              >
+                <span style={{ fontSize: 18 }}>{
+                  g.emoji === "8ball" ? "\uD83C\uDFB1" :
+                  g.emoji === "sparkles" ? "\u2728" :
+                  g.emoji === "confetti" ? "\uD83C\uDF89" :
+                  g.emoji === "wind" ? "\uD83C\uDF2C\uFE0F" :
+                  g.emoji === "dancer" ? "\uD83D\uDC83" :
+                  "\uD83D\uDD25"
+                }</span>
+                {g.label}
+              </button>
+            ))}
+          </div>
+        </FadeIn>
+
+        {/* Breathe animation */}
+        {breatheActive && (
+          <FadeIn>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <div style={{
+                width: 120, height: 120, borderRadius: "50%", margin: "0 auto 16px",
+                background: `radial-gradient(circle, ${C.amber}20 0%, transparent 70%)`,
+                border: `2px solid ${C.amber}30`,
+                animation: "breathe 4s ease-in-out infinite",
+              }} />
+              <div style={{ fontFamily: ft, fontSize: 16, color: C.txm }}>Breathe in... breathe out...</div>
+              <style>{`
+                @keyframes breathe {
+                  0%, 100% { transform: scale(0.8); opacity: 0.5; }
+                  50% { transform: scale(1.3); opacity: 1; }
+                }
+              `}</style>
+            </div>
+          </FadeIn>
+        )}
+
+        {/* Hype output */}
+        {hype && (
+          <FadeIn>
+            <GlassCard style={{ padding: "28px 32px", textAlign: "center", background: `linear-gradient(135deg, ${C.amber}08, ${C.violet}06)`, border: `1px solid ${C.amber}25` }}>
+              <div style={{ fontFamily: ft, fontSize: 18, fontWeight: 700, color: C.tx, lineHeight: 1.6 }}>
+                {hype}
+              </div>
+            </GlassCard>
+          </FadeIn>
+        )}
+
+        {/* Daily affirmations */}
+        <FadeIn delay={200}>
+          <div style={{ marginTop: 40, textAlign: "center" }}>
+            <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16 }}>Today's Affirmation</div>
+            <div style={{ fontFamily: ft, fontSize: 16, color: C.txm, fontStyle: "italic", lineHeight: 1.7, maxWidth: 500, margin: "0 auto" }}>
+              "{compliments[new Date().getDate() % compliments.length]}"
+            </div>
+          </div>
+        </FadeIn>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL OPS: MARKETING DEPLOYMENT TRACKER
+   ═══════════════════════════════════════════════════════════ */
+function MarketingDeployment() {
+  const phases = ["Partnership Alignment", "Creative & Logistics", "Audience Building", "Event Execution", "Post-Event"];
+  const [checkedItems, setCheckedItems] = useState<Set<string>>(() => {
+    try { const s = localStorage.getItem("sa-deploy-checks"); return s ? new Set(JSON.parse(s)) : new Set(); } catch { return new Set(); }
+  });
+
+  const toggle = (key: string) => {
+    const next = new Set(checkedItems);
+    next.has(key) ? next.delete(key) : next.add(key);
+    setCheckedItems(next);
+    localStorage.setItem("sa-deploy-checks", JSON.stringify(Array.from(next)));
+  };
+
+  const deploymentByEvent = EVENTS.map(ev => ({
+    event: ev,
+    tasks: [
+      { phase: 0, task: `Confirm ${ev.name} sponsorship tier + budget`, key: `${ev.name}-0-0` },
+      { phase: 0, task: `Align branding guidelines with AWS`, key: `${ev.name}-0-1` },
+      { phase: 0, task: `Define target attendee profile + invite criteria`, key: `${ev.name}-0-2` },
+      { phase: 1, task: `Design co-branded materials + signage`, key: `${ev.name}-1-0` },
+      { phase: 1, task: `Secure venue / logistics (if applicable)`, key: `${ev.name}-1-1` },
+      { phase: 1, task: `Produce invitations (digital + VIP physical)`, key: `${ev.name}-1-2` },
+      { phase: 2, task: `Newsletter feature announcing activation`, key: `${ev.name}-2-0` },
+      { phase: 2, task: `Targeted outreach to registered attendees`, key: `${ev.name}-2-1` },
+      { phase: 2, task: `Social media campaign launch`, key: `${ev.name}-2-2` },
+      { phase: 2, task: `Personal VIP invites (top 50 targets)`, key: `${ev.name}-2-3` },
+      { phase: 3, task: `Day-of setup + check-in system`, key: `${ev.name}-3-0` },
+      { phase: 3, task: `Photo/video capture`, key: `${ev.name}-3-1` },
+      { phase: 3, task: `AWS + SA welcome remarks`, key: `${ev.name}-3-2` },
+      { phase: 4, task: `Attendee survey sent`, key: `${ev.name}-4-0` },
+      { phase: 4, task: `Attendee list compiled for AWS`, key: `${ev.name}-4-1` },
+      { phase: 4, task: `ROI report delivered`, key: `${ev.name}-4-2` },
+      { phase: 4, task: `Social media recap content published`, key: `${ev.name}-4-3` },
+    ],
+  }));
+
+  const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
+
+  return (
+    <section style={{ padding: "80px 32px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <SectionLabel>Marketing Deployment</SectionLabel>
+            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          </div>
+          <SectionTitle>Campaign Tracker</SectionTitle>
+          <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 32 }}>
+            Track deployment progress per event. Checkboxes persist in your browser. Click an event to expand its checklist.
+          </p>
+        </FadeIn>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {deploymentByEvent.map(({ event: ev, tasks }) => {
+            const done = tasks.filter(t => checkedItems.has(t.key)).length;
+            const total = tasks.length;
+            const pct = Math.round((done / total) * 100);
+            const isOpen = expandedEvent === ev.name;
+
+            return (
+              <FadeIn key={ev.name}>
+                <div style={{ background: C.glass, backdropFilter: "blur(20px)", border: `1px solid ${isOpen ? C.amber + "30" : C.glassBorder}`, borderRadius: 16, overflow: "hidden", transition: "all 0.3s ease" }}>
+                  {/* Header */}
+                  <div onClick={() => setExpandedEvent(isOpen ? null : ev.name)} style={{ padding: "18px 24px", cursor: "pointer", display: "flex", alignItems: "center", gap: 16 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.glassBorder}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+                      <img src={ev.logo} alt={ev.name} style={{ width: 26, height: 26, objectFit: "contain", filter: ev.logo.endsWith(".svg") ? "brightness(0) invert(1)" : "none" }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontFamily: ft, fontSize: 15, fontWeight: 700, color: C.tx }}>{ev.name}</div>
+                      <div style={{ fontFamily: mn, fontSize: 11, color: C.txd }}>{ev.dates}</div>
+                    </div>
+                    {/* Progress bar */}
+                    <div style={{ width: 120, marginRight: 8 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                        <span style={{ fontFamily: mn, fontSize: 10, color: pct === 100 ? "#4ADE80" : C.amber }}>{pct}%</span>
+                        <span style={{ fontFamily: mn, fontSize: 10, color: C.txd }}>{done}/{total}</span>
+                      </div>
+                      <div style={{ width: "100%", height: 4, background: "rgba(255,255,255,0.04)", borderRadius: 2 }}>
+                        <div style={{ width: pct + "%", height: "100%", background: pct === 100 ? "#4ADE80" : `linear-gradient(90deg, ${C.amber}, ${C.amber}88)`, borderRadius: 2, transition: "width 0.3s ease" }} />
+                      </div>
+                    </div>
+                    <span style={{ color: C.txm, fontSize: 14, transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>{"\u25BC"}</span>
+                  </div>
+
+                  {/* Expanded checklist */}
+                  <div style={{ maxHeight: isOpen ? 600 : 0, opacity: isOpen ? 1 : 0, overflow: "hidden", transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)" }}>
+                    <div style={{ padding: "0 24px 20px", borderTop: `1px solid ${C.glassBorder}` }}>
+                      {phases.map((phase, pi) => {
+                        const phaseTasks = tasks.filter(t => t.phase === pi);
+                        return (
+                          <div key={phase} style={{ marginTop: 16 }}>
+                            <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8, fontWeight: 700 }}>{phase}</div>
+                            {phaseTasks.map(t => (
+                              <div key={t.key} onClick={() => toggle(t.key)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", cursor: "pointer" }}>
+                                <div style={{ width: 18, height: 18, borderRadius: 5, border: `2px solid ${checkedItems.has(t.key) ? "#4ADE80" : C.txd}`, background: checkedItems.has(t.key) ? "#4ADE80" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s ease" }}>
+                                  {checkedItems.has(t.key) && <span style={{ color: "#060608", fontSize: 10, fontWeight: 900 }}>{"\u2713"}</span>}
+                                </div>
+                                <span style={{ fontFamily: ft, fontSize: 13, color: checkedItems.has(t.key) ? C.txd : C.txm, textDecoration: checkedItems.has(t.key) ? "line-through" : "none", transition: "all 0.2s ease" }}>{t.task}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </FadeIn>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL OPS: COLD EMAIL GENERATOR
+   ═══════════════════════════════════════════════════════════ */
+function ColdEmailGenerator() {
+  const [selectedEvent, setSelectedEvent] = useState(EVENTS[0].name);
+  const [persona, setPersona] = useState("VP Engineering");
+  const [company, setCompany] = useState("");
+  const [generated, setGenerated] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const personas = ["VP Engineering", "Head of Marketing", "Director of Cloud", "CTO", "Research Lead", "Investor", "Conference Organizer"];
+  const ev = EVENTS.find(e => e.name === selectedEvent) || EVENTS[0];
+
+  const generateEmail = () => {
+    const templates: Record<string, string> = {
+      "VP Engineering": `Subject: ${ev.name} ${ev.dates.split(",")[0]} — exclusive SemiAnalysis x AWS event\n\nHi${company ? ` [Name at ${company}]` : " [Name]"},\n\nI'm reaching out because you're someone who shapes how AI infrastructure gets built — and we're hosting something special at ${ev.name} in ${ev.location} (${ev.dates}).\n\nSemiAnalysis is partnering with AWS on a ${ev.activation.toLowerCase()} targeting the senior engineering and infrastructure community. This isn't a conference booth — it's a curated, invite-only experience designed for people at your level.\n\nOur last event drew 750 attendees with 78% Director+ seniority. The conversations are real, the connections last.\n\nWould you like me to reserve a spot for you?\n\nBest,\nMichelle\nSemiAnalysis`,
+      "Head of Marketing": `Subject: Partner opportunity — ${ev.name} activation with SemiAnalysis x AWS\n\nHi${company ? ` [Name at ${company}]` : " [Name]"},\n\nSemiAnalysis is building the most ambitious event activation calendar in AI infrastructure — and ${ev.name} in ${ev.location} (${ev.dates}) is one of our key moments.\n\nWe're looking for brand partners who want authentic access to the AI infrastructure buying community. Our format (${ev.activation.toLowerCase()}) consistently outperforms traditional sponsorship: $40-80 per decision-maker vs $150-300 at standard conferences, with 78% Director+ seniority.\n\nWould a partnership conversation make sense for your team?\n\nBest,\nMichelle\nSemiAnalysis`,
+      "Director of Cloud": `Subject: You're invited — ${ev.name} with SemiAnalysis x AWS\n\nHi${company ? ` [Name at ${company}]` : " [Name]"},\n\nSemiAnalysis is hosting a ${ev.activation.toLowerCase()} at ${ev.name} in ${ev.location} (${ev.dates}), co-presented with AWS.\n\nWe're curating the guest list around cloud infrastructure decision-makers — people building and buying at scale. Given your role, you'd be exactly who we want in the room.\n\n200K+ newsletter subscribers trust us for AI infrastructure insights. Our events are where that community gathers in person.\n\nInterested in an invite?\n\nBest,\nMichelle\nSemiAnalysis`,
+      "CTO": `Subject: ${ev.name} — join the AI infrastructure conversation\n\nHi${company ? ` [Name at ${company}]` : " [Name]"},\n\nSemiAnalysis x AWS is hosting a ${ev.activation.toLowerCase()} at ${ev.name} (${ev.dates}, ${ev.location}).\n\nWe're building the guest list around CTOs and technical leaders who are shaping AI infrastructure decisions. The format is intimate, the people are senior, and the conversations go deeper than any expo floor.\n\nOur NeurIPS 2025 event drew 680 decision-makers. ${ev.name} will be similarly curated.\n\nShould I add you to the list?\n\nBest,\nMichelle\nSemiAnalysis`,
+      "Research Lead": `Subject: ${ev.name} — research community activation with SemiAnalysis\n\nHi${company ? ` [Name at ${company}]` : " [Name]"},\n\nSemiAnalysis is organizing a special ${ev.activation.toLowerCase()} alongside ${ev.name} in ${ev.location} (${ev.dates}).\n\nThis is designed for the research community — an intimate gathering of ML researchers, infrastructure architects, and the people pushing the frontier. No sales pitches, just high-signal conversations with peers.\n\nWould you like to be on the invite list?\n\nBest,\nMichelle\nSemiAnalysis`,
+      "Investor": `Subject: ${ev.name} — deal flow at the frontier\n\nHi${company ? ` [Name at ${company}]` : " [Name]"},\n\nSemiAnalysis is hosting a ${ev.activation.toLowerCase()} at ${ev.name} (${ev.dates}, ${ev.location}) co-presented with AWS.\n\nOur guest list reads like a cap table wish list — CTOs, VP Engs, and research leads from the companies building AI infrastructure. If you're looking at the AI compute stack, this is the room to be in.\n\nInterested?\n\nBest,\nMichelle\nSemiAnalysis`,
+      "Conference Organizer": `Subject: Collaboration at ${ev.name}?\n\nHi${company ? ` [Name at ${company}]` : " [Name]"},\n\nSemiAnalysis is planning a ${ev.activation.toLowerCase()} alongside ${ev.name} in ${ev.location} (${ev.dates}). We're partnering with AWS on this one.\n\nWe'd love to explore ways to coordinate — whether that's cross-promotion, shared logistics, or complementary programming. Our events consistently draw 200-400 senior attendees and we're always looking to build with the organizer community.\n\nWould a quick call make sense?\n\nBest,\nMichelle\nSemiAnalysis`,
+    };
+    setGenerated(templates[persona] || templates["VP Engineering"]);
+  };
+
+  return (
+    <section style={{ padding: "80px 32px", background: "rgba(255,255,255,0.01)" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <SectionLabel>Cold Email Generator</SectionLabel>
+            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          </div>
+          <SectionTitle>Outreach Templates by Event & Persona</SectionTitle>
+          <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 32 }}>
+            Select an event and target persona to generate a tailored cold email. Copy and customize before sending.
+          </p>
+        </FadeIn>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
+          {/* Controls */}
+          <FadeIn>
+            <div>
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, fontWeight: 700 }}>Event</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
+                {EVENTS.map(e => (
+                  <button key={e.name} onClick={() => setSelectedEvent(e.name)} style={{
+                    fontFamily: ft, fontSize: 12, fontWeight: selectedEvent === e.name ? 700 : 500,
+                    color: selectedEvent === e.name ? "#060608" : C.txm,
+                    background: selectedEvent === e.name ? `linear-gradient(135deg, ${C.amber}, #E8A020)` : "rgba(255,255,255,0.03)",
+                    border: `1px solid ${selectedEvent === e.name ? C.amber : C.glassBorder}`,
+                    borderRadius: 10, padding: "8px 14px", cursor: "pointer", transition: "all 0.2s ease",
+                  }}>{e.name}</button>
+                ))}
+              </div>
+
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, fontWeight: 700 }}>Target Persona</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
+                {personas.map(p => (
+                  <button key={p} onClick={() => setPersona(p)} style={{
+                    fontFamily: ft, fontSize: 12, fontWeight: persona === p ? 700 : 500,
+                    color: persona === p ? "#060608" : C.txm,
+                    background: persona === p ? `linear-gradient(135deg, ${C.violet}, ${C.violet}cc)` : "rgba(255,255,255,0.03)",
+                    border: `1px solid ${persona === p ? C.violet : C.glassBorder}`,
+                    borderRadius: 10, padding: "8px 14px", cursor: "pointer", transition: "all 0.2s ease",
+                  }}>{p}</button>
+                ))}
+              </div>
+
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>Company (optional)</div>
+              <input value={company} onChange={e => setCompany(e.target.value)} placeholder="e.g. NVIDIA, Anthropic, Scale AI..."
+                style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 10, color: C.tx, fontFamily: ft, fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 20 }}
+                onFocus={e => { e.target.style.borderColor = C.amber; }}
+                onBlur={e => { e.target.style.borderColor = C.glassBorder; }}
+              />
+
+              <button onClick={generateEmail} style={{
+                fontFamily: ft, fontSize: 14, fontWeight: 800, color: "#060608",
+                background: `linear-gradient(135deg, ${C.amber}, #E8A020)`,
+                padding: "14px 32px", borderRadius: 12, border: "none", cursor: "pointer",
+                boxShadow: `0 4px 20px ${C.amber}30`,
+              }}>
+                Generate Email
+              </button>
+            </div>
+          </FadeIn>
+
+          {/* Output */}
+          <FadeIn delay={100}>
+            <div>
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, fontWeight: 700 }}>Generated Email</div>
+              {generated ? (
+                <div style={{ position: "relative" }}>
+                  <pre style={{
+                    fontFamily: ft, fontSize: 13, color: C.txm, lineHeight: 1.7,
+                    whiteSpace: "pre-wrap", wordBreak: "break-word",
+                    padding: 20, background: "rgba(0,0,0,0.3)", borderRadius: 14,
+                    border: `1px solid ${C.glassBorder}`, maxHeight: 500, overflow: "auto",
+                  }}>{generated}</pre>
+                  <button onClick={() => { navigator.clipboard.writeText(generated); setCopied(true); setTimeout(() => setCopied(false), 2000); }} style={{
+                    position: "absolute", top: 12, right: 12,
+                    fontFamily: mn, fontSize: 10, fontWeight: 700,
+                    color: copied ? "#4ADE80" : C.amber, background: copied ? "#4ADE8015" : C.amber + "10",
+                    border: `1px solid ${copied ? "#4ADE8030" : C.amber + "30"}`,
+                    borderRadius: 8, padding: "6px 14px", cursor: "pointer",
+                  }}>{copied ? "Copied!" : "Copy"}</button>
+                </div>
+              ) : (
+                <GlassCard style={{ padding: "40px 24px", textAlign: "center" }}>
+                  <div style={{ fontFamily: ft, fontSize: 14, color: C.txd }}>Select an event + persona and hit generate</div>
+                </GlassCard>
+              )}
+            </div>
+          </FadeIn>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL OPS: BUDGET TRACKER
+   ═══════════════════════════════════════════════════════════ */
+function BudgetTracker() {
+  const categories = ["Venue", "Catering", "Production & AV", "Branding & Signage", "Travel", "Content Capture", "Misc"];
+  const [budgets, setBudgets] = useState<Record<string, Record<string, string>>>(() => {
+    try { const s = localStorage.getItem("sa-budgets"); return s ? JSON.parse(s) : {}; } catch { return {}; }
+  });
+
+  const getValue = (event: string, cat: string) => budgets[event]?.[cat] || "";
+  const setValue = (event: string, cat: string, val: string) => {
+    const next = { ...budgets, [event]: { ...budgets[event], [cat]: val } };
+    setBudgets(next);
+    localStorage.setItem("sa-budgets", JSON.stringify(next));
+  };
+
+  const getEventTotal = (event: string) => {
+    return categories.reduce((sum, cat) => sum + (parseFloat(getValue(event, cat)) || 0), 0);
+  };
+
+  const grandTotal = EVENTS.reduce((sum, ev) => sum + getEventTotal(ev.name), 0);
+
+  return (
+    <section style={{ padding: "80px 32px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <SectionLabel>Budget Tracker</SectionLabel>
+            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          </div>
+          <SectionTitle>Per-Event Cost Breakdown</SectionTitle>
+          <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 12 }}>
+            Track estimated costs per event. Data saves to your browser.
+          </p>
+          <div style={{ fontFamily: mn, fontSize: 20, fontWeight: 700, color: C.amber, marginBottom: 32 }}>
+            Grand Total: ${grandTotal.toLocaleString()}
+          </div>
+        </FadeIn>
+
+        <div style={{ overflowX: "auto" }}>
+          <GlassCard style={{ overflow: "hidden", minWidth: 900 }}>
+            {/* Header */}
+            <div style={{ display: "grid", gridTemplateColumns: `180px repeat(${categories.length}, 1fr) 100px`, borderBottom: `1px solid ${C.glassBorder}`, padding: "14px 20px", background: "rgba(255,255,255,0.02)" }}>
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "1px" }}>EVENT</div>
+              {categories.map(c => <div key={c} style={{ fontFamily: mn, fontSize: 9, color: C.txd, letterSpacing: "1px", textAlign: "center" }}>{c.toUpperCase()}</div>)}
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "1px", textAlign: "right" }}>TOTAL</div>
+            </div>
+            {/* Rows */}
+            {EVENTS.map((ev, i) => {
+              const total = getEventTotal(ev.name);
+              return (
+                <div key={ev.name} style={{ display: "grid", gridTemplateColumns: `180px repeat(${categories.length}, 1fr) 100px`, borderBottom: i < EVENTS.length - 1 ? `1px solid ${C.glassBorder}` : "none", padding: "10px 20px", alignItems: "center", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
+                  <div style={{ fontFamily: ft, fontSize: 13, fontWeight: 700, color: C.tx }}>{ev.name}</div>
+                  {categories.map(cat => (
+                    <div key={cat} style={{ padding: "0 4px" }}>
+                      <input
+                        value={getValue(ev.name, cat)}
+                        onChange={e => setValue(ev.name, cat, e.target.value)}
+                        placeholder="0"
+                        style={{ width: "100%", padding: "6px 8px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 6, color: C.tx, fontFamily: mn, fontSize: 12, outline: "none", textAlign: "center", boxSizing: "border-box" }}
+                        onFocus={e => { e.target.style.borderColor = C.amber; }}
+                        onBlur={e => { e.target.style.borderColor = C.glassBorder; }}
+                      />
+                    </div>
+                  ))}
+                  <div style={{ fontFamily: mn, fontSize: 13, fontWeight: 700, color: total > 0 ? C.amber : C.txd, textAlign: "right" }}>${total.toLocaleString()}</div>
+                </div>
+              );
+            })}
+          </GlassCard>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL OPS: CONTENT CALENDAR
+   ═══════════════════════════════════════════════════════════ */
+function ContentCalendar() {
+  const contentPlan = EVENTS.map(ev => ({
+    event: ev,
+    items: [
+      { timing: "6 weeks before", type: "Newsletter", desc: `Preview: "${ev.name} — what to expect + why AWS is there"`, channel: "200K subs" },
+      { timing: "4 weeks before", type: "Social", desc: `Countdown post with event card graphic`, channel: "Twitter/LinkedIn" },
+      { timing: "3 weeks before", type: "Newsletter", desc: `Deep dive: industry context for ${ev.name} + invite CTA`, channel: "200K subs" },
+      { timing: "2 weeks before", type: "YouTube", desc: `Video: "Why ${ev.name} matters for AI infrastructure"`, channel: "1M+ views/mo" },
+      { timing: "1 week before", type: "Social", desc: `Final invite push + speaker/agenda tease`, channel: "Twitter/LinkedIn" },
+      { timing: "Day of", type: "Social", desc: `Live coverage: photos, quotes, key moments`, channel: "All platforms" },
+      { timing: "Day after", type: "Social", desc: `Highlight reel + thank you post`, channel: "All platforms" },
+      { timing: "1 week after", type: "Newsletter", desc: `Event recap: key takeaways, photos, what's next`, channel: "200K subs" },
+      { timing: "2 weeks after", type: "YouTube", desc: `Video recap or interview compilation`, channel: "1M+ views/mo" },
+    ],
+  }));
+
+  const [openEvent, setOpenEvent] = useState<string | null>(null);
+  const typeColors: Record<string, string> = { Newsletter: C.amber, Social: C.blue, YouTube: C.coral };
+
+  return (
+    <section style={{ padding: "80px 32px", background: "rgba(255,255,255,0.01)" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <SectionLabel>Content Calendar</SectionLabel>
+            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          </div>
+          <SectionTitle>Publication Plan Per Event</SectionTitle>
+          <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 32 }}>
+            9 content touchpoints per event across newsletter (200K), YouTube (1M+/mo), and social. Click to expand.
+          </p>
+        </FadeIn>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {contentPlan.map(({ event: ev, items }) => {
+            const isOpen = openEvent === ev.name;
+            return (
+              <FadeIn key={ev.name}>
+                <div style={{ background: C.glass, backdropFilter: "blur(20px)", border: `1px solid ${isOpen ? C.amber + "30" : C.glassBorder}`, borderRadius: 16, overflow: "hidden", transition: "all 0.3s ease" }}>
+                  <div onClick={() => setOpenEvent(isOpen ? null : ev.name)} style={{ padding: "18px 24px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ fontFamily: ft, fontSize: 15, fontWeight: 700, color: C.tx }}>{ev.name}</div>
+                      <div style={{ fontFamily: mn, fontSize: 11, color: C.txd }}>{ev.dates}</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontFamily: mn, fontSize: 11, color: C.amber }}>{items.length} pieces</span>
+                      <span style={{ color: C.txm, fontSize: 14, transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>{"\u25BC"}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ maxHeight: isOpen ? 600 : 0, opacity: isOpen ? 1 : 0, overflow: "hidden", transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)" }}>
+                    <div style={{ padding: "0 24px 20px", borderTop: `1px solid ${C.glassBorder}` }}>
+                      {items.map((item, i) => (
+                        <div key={i} style={{ display: "grid", gridTemplateColumns: "130px 90px 1fr 120px", gap: 12, padding: "10px 0", borderBottom: i < items.length - 1 ? `1px solid rgba(255,255,255,0.03)` : "none", alignItems: "center" }}>
+                          <span style={{ fontFamily: mn, fontSize: 11, color: C.txd }}>{item.timing}</span>
+                          <span style={{ fontFamily: mn, fontSize: 10, color: typeColors[item.type] || C.txm, background: (typeColors[item.type] || C.txm) + "12", border: `1px solid ${(typeColors[item.type] || C.txm)}25`, borderRadius: 6, padding: "3px 8px", textAlign: "center" }}>{item.type}</span>
+                          <span style={{ fontFamily: ft, fontSize: 13, color: C.txm }}>{item.desc}</span>
+                          <span style={{ fontFamily: mn, fontSize: 10, color: C.txd, textAlign: "right" }}>{item.channel}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </FadeIn>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function InternalAnalyticsTab() {
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", position: "relative" }}>
+      <GradientMesh />
+      <div style={{ position: "relative", zIndex: 1, paddingTop: 80 }}>
+        <StatusAdmin />
+        <ROICalculator />
+        <ComparisonTable />
+        <MichelleToolkit />
+        <SubmissionsViewer />
+        <MakeMichelleHappy />
+      </div>
+    </div>
+  );
+}
+
+function InternalOpsTab() {
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", position: "relative" }}>
+      <GradientMesh />
+      <div style={{ position: "relative", zIndex: 1, paddingTop: 80 }}>
+        <MarketingDeployment />
+        <ColdEmailGenerator />
+        <BudgetTracker />
+        <ContentCalendar />
+      </div>
+    </div>
+  );
+}
+
+export default function InternalClient() {
   const [active, setActive] = useState(0);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth", { method: "DELETE" });
+    window.location.href = "/";
+  };
 
   return (
     <>
@@ -1335,7 +2617,7 @@ export default function EventsClient() {
         }
       `}</style>
 
-      {/* NAV */}
+      {/* NAV — always internal */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
         padding: "14px 32px",
@@ -1348,10 +2630,11 @@ export default function EventsClient() {
           <img src="/images/events/semianalysis.png" alt="SemiAnalysis" style={{ height: 22, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
           <span style={{ color: C.txd, fontSize: 20, fontWeight: 200 }}>{"\u00D7"}</span>
           <img src="/images/events/aws.svg" alt="AWS" style={{ height: 18, objectFit: "contain" }} />
+          <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "3px 10px", letterSpacing: "1px", fontWeight: 700, marginLeft: 8 }}>INTERNAL</span>
         </div>
 
         <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 3 }}>
-          {TABS_PUBLIC.map((tab, i) => (
+          {TABS_INTERNAL.map((tab, i) => (
             <button
               key={tab.key}
               onClick={() => { setActive(i); window.scrollTo({ top: 0, behavior: "smooth" }); }}
@@ -1369,32 +2652,20 @@ export default function EventsClient() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <a href="/login" style={{
-            fontFamily: mn, fontSize: 10, color: C.txd,
-            background: "rgba(255,255,255,0.03)",
-            border: `1px solid ${C.glassBorder}`,
-            borderRadius: 8, padding: "6px 14px",
-            textDecoration: "none", display: "flex", alignItems: "center", gap: 6,
+          <button onClick={handleLogout} style={{ fontFamily: mn, fontSize: 10, color: C.txd, background: "none", border: `1px solid ${C.glassBorder}`, borderRadius: 8, padding: "6px 14px", cursor: "pointer", transition: "all 0.2s ease" }}>
+            Logout
+          </button>
+          <a href="/" style={{
+            fontFamily: ft, fontSize: 12, fontWeight: 700, color: "#060608",
+            background: `linear-gradient(135deg, ${C.amber}, #E8A020)`,
+            padding: "8px 20px", borderRadius: 8, textDecoration: "none",
           }}>
-            {"\uD83D\uDD12"} Team
-          </a>
-          <a
-            href="#cta"
-            onClick={(e) => { e.preventDefault(); document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" }); }}
-            style={{
-              fontFamily: ft, fontSize: 12, fontWeight: 700, color: "#060608",
-              background: `linear-gradient(135deg, ${C.amber}, #E8A020)`,
-              padding: "8px 20px", borderRadius: 8, textDecoration: "none",
-            }}
-          >
-            Let{"'"}s Partner
+            Public Site
           </a>
         </div>
       </nav>
 
-      {active === 0 ? <OverviewTab internal={false} /> : <CalendarTab />}
+      {active === 0 ? <OverviewTab internal={true} /> : active === 1 ? <CalendarTab /> : active === 2 ? <InternalAnalyticsTab /> : <InternalOpsTab />}
     </>
   );
 }
-
-/* END — no internal code below this line */
