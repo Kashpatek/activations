@@ -1071,6 +1071,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
           </div>
         </section>
 
+        <GlowDivider color={C.amber} />
         {/* ─── PARTNERSHIP VALUE PROP ─── */}
         <section id="benefits" style={{ padding: "80px 32px", background: "rgba(255,255,255,0.01)" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
@@ -1103,6 +1104,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
           </div>
         </section>
 
+        <GlowDivider color={C.coral} />
         {/* ─── INVESTMENT TIERS ─── */}
         <section id="tiers" style={{ padding: "80px 32px", maxWidth: 1100, margin: "0 auto" }}>
           <FadeIn>
