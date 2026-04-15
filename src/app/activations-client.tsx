@@ -889,22 +889,28 @@ function CalendarTab() {
 function GradientMesh() {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
-      {/* Primary amber glow — top left */}
-      <div style={{ position: "absolute", top: "-15%", left: "-12%", width: "55vw", height: "55vw", background: `radial-gradient(circle, ${C.amber}1A 0%, ${C.amber}08 40%, transparent 70%)`, borderRadius: "50%", filter: "blur(80px)" }} />
-      {/* Blue glow — right side */}
-      <div style={{ position: "absolute", top: "25%", right: "-18%", width: "50vw", height: "50vw", background: `radial-gradient(circle, ${C.blue}18 0%, ${C.blue}08 40%, transparent 70%)`, borderRadius: "50%", filter: "blur(80px)" }} />
-      {/* Violet glow — bottom center */}
-      <div style={{ position: "absolute", bottom: "-12%", left: "15%", width: "55vw", height: "55vw", background: `radial-gradient(circle, ${C.violet}15 0%, ${C.violet}06 40%, transparent 70%)`, borderRadius: "50%", filter: "blur(80px)" }} />
-      {/* Coral accent — mid right */}
-      <div style={{ position: "absolute", top: "55%", right: "5%", width: "30vw", height: "30vw", background: `radial-gradient(circle, ${C.coral}10 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(100px)" }} />
-      {/* Teal accent — lower left */}
-      <div style={{ position: "absolute", bottom: "15%", left: "-5%", width: "35vw", height: "35vw", background: `radial-gradient(circle, ${C.teal}0E 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(90px)" }} />
-      {/* Amber secondary — center top (hero area warmth) */}
-      <div style={{ position: "absolute", top: "5%", left: "30%", width: "40vw", height: "40vw", background: `radial-gradient(circle, ${C.amber}0C 0%, transparent 50%)`, borderRadius: "50%", filter: "blur(120px)" }} />
-      {/* AWS orange subtle — bottom right */}
-      <div style={{ position: "absolute", bottom: "5%", right: "10%", width: "25vw", height: "25vw", background: `radial-gradient(circle, ${C.aws}08 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(80px)" }} />
+      {/* Primary amber glow — top left — BIG */}
+      <div style={{ position: "absolute", top: "-20%", left: "-15%", width: "65vw", height: "65vw", background: `radial-gradient(circle, ${C.amber}28 0%, ${C.amber}10 35%, transparent 65%)`, borderRadius: "50%", filter: "blur(60px)" }} />
+      {/* Blue glow — right side — BIG */}
+      <div style={{ position: "absolute", top: "20%", right: "-20%", width: "60vw", height: "60vw", background: `radial-gradient(circle, ${C.blue}24 0%, ${C.blue}0C 35%, transparent 65%)`, borderRadius: "50%", filter: "blur(60px)" }} />
+      {/* Violet glow — bottom center — BIG */}
+      <div style={{ position: "absolute", bottom: "-15%", left: "10%", width: "60vw", height: "60vw", background: `radial-gradient(circle, ${C.violet}22 0%, ${C.violet}0A 35%, transparent 65%)`, borderRadius: "50%", filter: "blur(60px)" }} />
+      {/* Coral bloom — mid right */}
+      <div style={{ position: "absolute", top: "50%", right: "0%", width: "40vw", height: "40vw", background: `radial-gradient(circle, ${C.coral}1A 0%, ${C.coral}06 40%, transparent 65%)`, borderRadius: "50%", filter: "blur(70px)" }} />
+      {/* Teal bloom — lower left */}
+      <div style={{ position: "absolute", bottom: "10%", left: "-8%", width: "45vw", height: "45vw", background: `radial-gradient(circle, ${C.teal}18 0%, ${C.teal}06 40%, transparent 65%)`, borderRadius: "50%", filter: "blur(70px)" }} />
+      {/* Amber secondary — center */}
+      <div style={{ position: "absolute", top: "0%", left: "25%", width: "50vw", height: "50vw", background: `radial-gradient(circle, ${C.amber}14 0%, transparent 50%)`, borderRadius: "50%", filter: "blur(80px)" }} />
+      {/* AWS orange — bottom right */}
+      <div style={{ position: "absolute", bottom: "0%", right: "5%", width: "35vw", height: "35vw", background: `radial-gradient(circle, ${C.aws}12 0%, transparent 55%)`, borderRadius: "50%", filter: "blur(60px)" }} />
+      {/* Cyan accent — center left */}
+      <div style={{ position: "absolute", top: "35%", left: "5%", width: "30vw", height: "30vw", background: `radial-gradient(circle, ${C.cyan}10 0%, transparent 55%)`, borderRadius: "50%", filter: "blur(70px)" }} />
+      {/* Deep violet — top right corner */}
+      <div style={{ position: "absolute", top: "-5%", right: "5%", width: "35vw", height: "35vw", background: `radial-gradient(circle, #6B21A812 0%, transparent 55%)`, borderRadius: "50%", filter: "blur(80px)" }} />
+      {/* Warm amber center band */}
+      <div style={{ position: "absolute", top: "40%", left: "20%", width: "60vw", height: "20vw", background: `radial-gradient(ellipse 70% 40% at 50% 50%, ${C.amber}0A 0%, transparent 70%)`, filter: "blur(40px)" }} />
       {/* Noise/grain overlay for depth */}
-      <div style={{ position: "absolute", inset: 0, opacity: 0.015, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")", backgroundRepeat: "repeat" }} />
+      <div style={{ position: "absolute", inset: 0, opacity: 0.02, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")", backgroundRepeat: "repeat" }} />
     </div>
   );
 }
@@ -921,10 +927,15 @@ function OverviewTab({ internal }: { internal: boolean }) {
       <div style={{ position: "relative", zIndex: 1 }}>
         {/* ─── HERO ─── */}
         <section id="hero" style={{ minHeight: "90vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 32px", position: "relative", overflow: "hidden" }}>
-          {/* Hero-specific aura */}
-          <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: "80vw", height: "60vh", background: `radial-gradient(ellipse 60% 50% at 50% 40%, ${C.amber}10 0%, transparent 60%)`, pointerEvents: "none" }} />
-          <div style={{ position: "absolute", top: "40%", left: "20%", width: "30vw", height: "30vw", background: `radial-gradient(circle, ${C.blue}0A 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", top: "30%", right: "15%", width: "25vw", height: "25vw", background: `radial-gradient(circle, ${C.violet}08 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none" }} />
+          {/* Hero-specific aura — intense */}
+          <div style={{ position: "absolute", top: "5%", left: "50%", transform: "translateX(-50%)", width: "90vw", height: "80vh", background: `radial-gradient(ellipse 60% 50% at 50% 40%, ${C.amber}1A 0%, ${C.amber}08 40%, transparent 70%)`, pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: "30%", left: "15%", width: "35vw", height: "35vw", background: `radial-gradient(circle, ${C.blue}14 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(50px)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: "25%", right: "10%", width: "30vw", height: "30vw", background: `radial-gradient(circle, ${C.violet}12 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(50px)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: "20%", left: "50%", transform: "translateX(-50%)", width: "50vw", height: "20vh", background: `radial-gradient(ellipse 80% 40% at 50% 50%, ${C.coral}0C 0%, transparent 70%)`, pointerEvents: "none", filter: "blur(40px)" }} />
+          {/* Flowing rings */}
+          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 600, height: 600, borderRadius: "50%", border: `1px solid ${C.amber}08`, pointerEvents: "none", animation: "flowRing 20s linear infinite" }} />
+          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 450, height: 450, borderRadius: "50%", border: `1px solid ${C.blue}06`, pointerEvents: "none", animation: "flowRing 15s linear infinite reverse" }} />
+          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 750, height: 750, borderRadius: "50%", border: `1px solid ${C.violet}05`, pointerEvents: "none", animation: "flowRing 25s linear infinite" }} />
           <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 900 }}>
             <FadeIn>
               <div style={{ fontFamily: mn, fontSize: 11, color: C.amber, letterSpacing: "4px", textTransform: "uppercase", marginBottom: 24 }}>2026 Event Partnership</div>
@@ -1958,6 +1969,196 @@ function SubmissionsViewer() {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   INTERNAL: MAKE MICHELLE HAPPY
+   ═══════════════════════════════════════════════════════════ */
+function MakeMichelleHappy() {
+  const [hype, setHype] = useState("");
+  const [confetti, setConfetti] = useState(false);
+  const [breatheActive, setBreatheActive] = useState(false);
+  const [danceMode, setDanceMode] = useState(false);
+  const [streak, setStreak] = useState(() => {
+    try { return parseInt(localStorage.getItem("sa-michelle-streak") || "0", 10); } catch { return 0; }
+  });
+
+  const compliments = [
+    "Michelle, you're literally the reason this partnership exists.",
+    "The events industry doesn't deserve you. But AWS does.",
+    "750 people on a boat? That was YOUR doing.",
+    "You turn cold emails into signed contracts. That's a superpower.",
+    "Every event you touch turns into the must-attend of the conference.",
+    "You could sell ice to a penguin and the penguin would say thank you.",
+    "The AI infrastructure community is better because you're in it.",
+    "You don't network. You build constellations of people.",
+    "Three continents, eight events, one Michelle. The math checks out.",
+    "AWS should be thanking YOU for letting them partner.",
+    "Fun fact: the gradient glass on this site was inspired by your energy.",
+    "You're not just closing deals — you're creating experiences people remember for years.",
+    "Somewhere, a VP of Engineering is telling their team about your event. Right now.",
+    "If events were an Olympic sport, you'd have the gold and the world record.",
+    "You make 'herding cats' look like a choreographed ballet.",
+    "SemiAnalysis has 200K subscribers. They should all know your name.",
+    "The Computex banquet? Legendary. That was you.",
+    "You've probably generated more pipeline than most SDR teams combined.",
+    "Your Slack messages should come with a standing ovation.",
+    "When you walk into a conference, the conference gets better.",
+  ];
+
+  const miniGames = [
+    { emoji: "8ball", label: "Magic 8-Ball", action: () => {
+      const answers = ["AWS will say yes", "NeurIPS boat cruise will be ICONIC", "The budget will get approved", "Michelle energy is unstoppable today", "Outlook: literally legendary", "Signs point to a signed contract", "The vibes are immaculate", "Absolutely — and they'll thank you for it"];
+      setHype(answers[Math.floor(Math.random() * answers.length)]);
+    }},
+    { emoji: "sparkles", label: "Hype Me Up", action: () => {
+      setHype(compliments[Math.floor(Math.random() * compliments.length)]);
+    }},
+    { emoji: "confetti", label: "Confetti", action: () => {
+      setConfetti(true);
+      setTimeout(() => setConfetti(false), 3000);
+    }},
+    { emoji: "wind", label: "Breathe", action: () => {
+      setBreatheActive(true);
+      setTimeout(() => setBreatheActive(false), 8000);
+    }},
+    { emoji: "dancer", label: "Dance Break", action: () => {
+      setDanceMode(true);
+      setTimeout(() => setDanceMode(false), 5000);
+    }},
+    { emoji: "fire", label: "Streak +1", action: () => {
+      const next = streak + 1;
+      setStreak(next);
+      localStorage.setItem("sa-michelle-streak", String(next));
+      setHype(`Streak: ${next} day${next > 1 ? "s" : ""} of being incredible`);
+    }},
+  ];
+
+  return (
+    <section style={{ padding: "80px 32px", position: "relative", overflow: "hidden" }}>
+      {/* Confetti */}
+      {confetti && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, pointerEvents: "none" }}>
+          {Array.from({ length: 60 }, (_, i) => (
+            <div key={i} style={{
+              position: "absolute",
+              left: Math.random() * 100 + "%",
+              top: -20,
+              width: 8 + Math.random() * 8,
+              height: 8 + Math.random() * 8,
+              background: [C.amber, C.blue, C.coral, C.violet, C.teal, "#4ADE80", C.aws][i % 7],
+              borderRadius: Math.random() > 0.5 ? "50%" : "2px",
+              animation: `confettiFall ${2 + Math.random() * 2}s ease-out forwards`,
+              animationDelay: Math.random() * 0.5 + "s",
+              opacity: 0.9,
+            }} />
+          ))}
+          <style>{`
+            @keyframes confettiFall {
+              0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+              100% { transform: translateY(100vh) rotate(${360 + Math.random() * 360}deg); opacity: 0; }
+            }
+          `}</style>
+        </div>
+      )}
+
+      {/* Dance mode background pulse */}
+      {danceMode && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 150, pointerEvents: "none", animation: "dancePulse 0.4s ease infinite alternate" }}>
+          <div style={{ position: "absolute", inset: 0, background: `radial-gradient(circle at 50% 50%, ${C.violet}15 0%, transparent 60%)` }} />
+          <style>{`
+            @keyframes dancePulse {
+              0% { opacity: 0.3; }
+              100% { opacity: 0.8; }
+            }
+          `}</style>
+        </div>
+      )}
+
+      <div style={{ maxWidth: 800, margin: "0 auto", position: "relative", zIndex: 1 }}>
+        <FadeIn>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>{"\\u2728"}</div>
+            <h2 style={{ fontFamily: gf, fontSize: 36, fontWeight: 900, background: `linear-gradient(135deg, ${C.amber} 0%, ${C.coral} 40%, ${C.violet} 70%, ${C.blue} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "-1px", marginBottom: 8 }}>
+              Make Michelle Happy
+            </h2>
+            <p style={{ fontFamily: ft, fontSize: 15, color: C.txm }}>Because you deserve a break. And a compliment. And confetti.</p>
+            {streak > 0 && <div style={{ fontFamily: mn, fontSize: 12, color: C.amber, marginTop: 8 }}>Current streak: {streak} day{streak > 1 ? "s" : ""} of being incredible</div>}
+          </div>
+        </FadeIn>
+
+        {/* Action buttons */}
+        <FadeIn delay={100}>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 32 }}>
+            {miniGames.map(g => (
+              <button key={g.label} onClick={g.action} style={{
+                fontFamily: ft, fontSize: 13, fontWeight: 700, color: C.tx,
+                background: C.glass, backdropFilter: "blur(20px)",
+                border: `1px solid ${C.glassBorder}`, borderRadius: 14,
+                padding: "14px 20px", cursor: "pointer", transition: "all 0.2s ease",
+                display: "flex", alignItems: "center", gap: 8,
+              }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = C.amber + "40"; e.currentTarget.style.boxShadow = `0 4px 20px ${C.amber}15`; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.glassBorder; e.currentTarget.style.boxShadow = "none"; }}
+              >
+                <span style={{ fontSize: 18 }}>{
+                  g.emoji === "8ball" ? "\uD83C\uDFB1" :
+                  g.emoji === "sparkles" ? "\u2728" :
+                  g.emoji === "confetti" ? "\uD83C\uDF89" :
+                  g.emoji === "wind" ? "\uD83C\uDF2C\uFE0F" :
+                  g.emoji === "dancer" ? "\uD83D\uDC83" :
+                  "\uD83D\uDD25"
+                }</span>
+                {g.label}
+              </button>
+            ))}
+          </div>
+        </FadeIn>
+
+        {/* Breathe animation */}
+        {breatheActive && (
+          <FadeIn>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <div style={{
+                width: 120, height: 120, borderRadius: "50%", margin: "0 auto 16px",
+                background: `radial-gradient(circle, ${C.amber}20 0%, transparent 70%)`,
+                border: `2px solid ${C.amber}30`,
+                animation: "breathe 4s ease-in-out infinite",
+              }} />
+              <div style={{ fontFamily: ft, fontSize: 16, color: C.txm }}>Breathe in... breathe out...</div>
+              <style>{`
+                @keyframes breathe {
+                  0%, 100% { transform: scale(0.8); opacity: 0.5; }
+                  50% { transform: scale(1.3); opacity: 1; }
+                }
+              `}</style>
+            </div>
+          </FadeIn>
+        )}
+
+        {/* Hype output */}
+        {hype && (
+          <FadeIn>
+            <GlassCard style={{ padding: "28px 32px", textAlign: "center", background: `linear-gradient(135deg, ${C.amber}08, ${C.violet}06)`, border: `1px solid ${C.amber}25` }}>
+              <div style={{ fontFamily: ft, fontSize: 18, fontWeight: 700, color: C.tx, lineHeight: 1.6 }}>
+                {hype}
+              </div>
+            </GlassCard>
+          </FadeIn>
+        )}
+
+        {/* Daily affirmations */}
+        <FadeIn delay={200}>
+          <div style={{ marginTop: 40, textAlign: "center" }}>
+            <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16 }}>Today's Affirmation</div>
+            <div style={{ fontFamily: ft, fontSize: 16, color: C.txm, fontStyle: "italic", lineHeight: 1.7, maxWidth: 500, margin: "0 auto" }}>
+              "{compliments[new Date().getDate() % compliments.length]}"
+            </div>
+          </div>
+        </FadeIn>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
    INTERNAL OPS: MARKETING DEPLOYMENT TRACKER
    ═══════════════════════════════════════════════════════════ */
 function MarketingDeployment() {
@@ -2357,6 +2558,7 @@ function InternalAnalyticsTab() {
         <ComparisonTable />
         <MichelleToolkit />
         <SubmissionsViewer />
+        <MakeMichelleHappy />
       </div>
     </div>
   );
@@ -2417,6 +2619,10 @@ export default function EventsClient() {
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #050508; }
         ::-webkit-scrollbar-thumb { background: #4E4B56; border-radius: 3px; }
+        @keyframes flowRing {
+          0% { transform: translate(-50%, -50%) rotate(0deg); }
+          100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
         @media (max-width: 768px) {
           section > div { padding: 0 16px !important; }
         }
