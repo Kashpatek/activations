@@ -483,6 +483,15 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return <div style={{ fontFamily: mn, fontSize: 11, color: C.amber, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 12, fontWeight: 700 }}>{children}</div>;
 }
 
+function GlowDivider({ color = C.amber }: { color?: string }) {
+  return (
+    <div style={{ position: "relative", height: 1, margin: "0 auto", maxWidth: 1100 }}>
+      <div style={{ position: "absolute", inset: 0, background: `linear-gradient(90deg, transparent, ${color}30, transparent)` }} />
+      <div style={{ position: "absolute", top: -20, left: "50%", transform: "translateX(-50%)", width: 200, height: 40, background: `radial-gradient(ellipse, ${color}12 0%, transparent 70%)`, pointerEvents: "none" }} />
+    </div>
+  );
+}
+
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <h2 style={{ fontFamily: gf, fontSize: 42, fontWeight: 800, color: C.tx, lineHeight: 1.15, marginBottom: 16, letterSpacing: "-1px" }}>{children}</h2>;
 }
@@ -880,9 +889,22 @@ function CalendarTab() {
 function GradientMesh() {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
-      <div style={{ position: "absolute", top: "-10%", left: "-10%", width: "50vw", height: "50vw", background: `radial-gradient(circle, ${C.amber}12 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(100px)" }} />
-      <div style={{ position: "absolute", top: "30%", right: "-15%", width: "50vw", height: "50vw", background: `radial-gradient(circle, ${C.blue}0F 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(100px)" }} />
-      <div style={{ position: "absolute", bottom: "-10%", left: "20%", width: "50vw", height: "50vw", background: `radial-gradient(circle, ${C.violet}0C 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(100px)" }} />
+      {/* Primary amber glow — top left */}
+      <div style={{ position: "absolute", top: "-15%", left: "-12%", width: "55vw", height: "55vw", background: `radial-gradient(circle, ${C.amber}1A 0%, ${C.amber}08 40%, transparent 70%)`, borderRadius: "50%", filter: "blur(80px)" }} />
+      {/* Blue glow — right side */}
+      <div style={{ position: "absolute", top: "25%", right: "-18%", width: "50vw", height: "50vw", background: `radial-gradient(circle, ${C.blue}18 0%, ${C.blue}08 40%, transparent 70%)`, borderRadius: "50%", filter: "blur(80px)" }} />
+      {/* Violet glow — bottom center */}
+      <div style={{ position: "absolute", bottom: "-12%", left: "15%", width: "55vw", height: "55vw", background: `radial-gradient(circle, ${C.violet}15 0%, ${C.violet}06 40%, transparent 70%)`, borderRadius: "50%", filter: "blur(80px)" }} />
+      {/* Coral accent — mid right */}
+      <div style={{ position: "absolute", top: "55%", right: "5%", width: "30vw", height: "30vw", background: `radial-gradient(circle, ${C.coral}10 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(100px)" }} />
+      {/* Teal accent — lower left */}
+      <div style={{ position: "absolute", bottom: "15%", left: "-5%", width: "35vw", height: "35vw", background: `radial-gradient(circle, ${C.teal}0E 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(90px)" }} />
+      {/* Amber secondary — center top (hero area warmth) */}
+      <div style={{ position: "absolute", top: "5%", left: "30%", width: "40vw", height: "40vw", background: `radial-gradient(circle, ${C.amber}0C 0%, transparent 50%)`, borderRadius: "50%", filter: "blur(120px)" }} />
+      {/* AWS orange subtle — bottom right */}
+      <div style={{ position: "absolute", bottom: "5%", right: "10%", width: "25vw", height: "25vw", background: `radial-gradient(circle, ${C.aws}08 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(80px)" }} />
+      {/* Noise/grain overlay for depth */}
+      <div style={{ position: "absolute", inset: 0, opacity: 0.015, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")", backgroundRepeat: "repeat" }} />
     </div>
   );
 }
@@ -898,8 +920,12 @@ function OverviewTab({ internal }: { internal: boolean }) {
 
       <div style={{ position: "relative", zIndex: 1 }}>
         {/* ─── HERO ─── */}
-        <section id="hero" style={{ minHeight: "90vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 32px" }}>
-          <div style={{ textAlign: "center", maxWidth: 900 }}>
+        <section id="hero" style={{ minHeight: "90vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 32px", position: "relative", overflow: "hidden" }}>
+          {/* Hero-specific aura */}
+          <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: "80vw", height: "60vh", background: `radial-gradient(ellipse 60% 50% at 50% 40%, ${C.amber}10 0%, transparent 60%)`, pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: "40%", left: "20%", width: "30vw", height: "30vw", background: `radial-gradient(circle, ${C.blue}0A 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: "30%", right: "15%", width: "25vw", height: "25vw", background: `radial-gradient(circle, ${C.violet}08 0%, transparent 60%)`, borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none" }} />
+          <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 900 }}>
             <FadeIn>
               <div style={{ fontFamily: mn, fontSize: 11, color: C.amber, letterSpacing: "4px", textTransform: "uppercase", marginBottom: 24 }}>2026 Event Partnership</div>
             </FadeIn>
@@ -927,6 +953,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
           </div>
         </section>
 
+        <GlowDivider color={C.amber} />
         {/* ─── STATS BAR ─── */}
         <section id="stats" style={{ padding: "48px 32px" }}>
           <div style={{ maxWidth: 1000, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
@@ -940,6 +967,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
           </div>
         </section>
 
+        <GlowDivider color={C.blue} />
         {/* ─── EVENT CARDS (expandable) ─── */}
         <section id="events" style={{ padding: "80px 32px", maxWidth: 1100, margin: "0 auto" }}>
           <FadeIn>
@@ -977,6 +1005,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
           </div>
         </section>
 
+        <GlowDivider color={C.violet} />
         {/* ─── PAST EVENTS ─── */}
         <section id="track-record" style={{ padding: "80px 32px", background: "rgba(255,255,255,0.01)" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
@@ -1018,6 +1047,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
           </div>
         </section>
 
+        <GlowDivider color={C.teal} />
         {/* ─── WHY SEMIANALYSIS ─── */}
         <section id="why" style={{ padding: "80px 32px", maxWidth: 1100, margin: "0 auto" }}>
           <FadeIn>
@@ -2032,11 +2062,18 @@ export default function EventsClient() {
               Exit Internal
             </button>
           ) : (
-            <button onClick={() => setGateShown(true)} style={{ fontFamily: mn, fontSize: 10, color: C.txd, background: "none", border: "none", cursor: "pointer", padding: "6px 8px", transition: "all 0.2s ease" }}
-              onMouseEnter={e => e.currentTarget.style.color = C.txm}
-              onMouseLeave={e => e.currentTarget.style.color = C.txd}
+            <button onClick={() => setGateShown(true)} style={{
+              fontFamily: mn, fontSize: 11, color: C.txd,
+              background: "rgba(255,255,255,0.03)",
+              border: `1px solid ${C.glassBorder}`,
+              borderRadius: 8, cursor: "pointer",
+              padding: "6px 14px", transition: "all 0.2s ease",
+              display: "flex", alignItems: "center", gap: 6,
+            }}
+              onMouseEnter={e => { e.currentTarget.style.color = C.amber; e.currentTarget.style.borderColor = C.amber + "40"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = C.txd; e.currentTarget.style.borderColor = C.glassBorder; }}
             >
-              {"\u26BF"}
+              <span style={{ fontSize: 14 }}>{"\uD83D\uDD12"}</span> Team
             </button>
           )}
           <a
