@@ -1980,7 +1980,24 @@ function MakeMichelleHappy() {
   const [confetti, setConfetti] = useState(false);
   const [breatheActive, setBreatheActive] = useState(false);
   const [danceMode, setDanceMode] = useState(false);
+  const [danceGifs, setDanceGifs] = useState<{ id: number; src: string; left: number; top: number; size: number }[]>([]);
+  const danceGifTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const danceGifId = useRef(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const DANCE_GIFS = [
+    "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif",
+    "https://media.giphy.com/media/3o7TKnO6Wve6502iJ2/giphy.gif",
+    "https://media.giphy.com/media/5xaOcLGvzHxDKjR1LLq/giphy.gif",
+    "https://media.giphy.com/media/l3q2Ip7FrmL2EpN6g/giphy.gif",
+    "https://media.giphy.com/media/26BRBKqUiq586bRVm/giphy.gif",
+    "https://media.giphy.com/media/3o6ZtpxSZbQRRnwCKQ/giphy.gif",
+    "https://media.giphy.com/media/l46CyJmS9KUbokzsI/giphy.gif",
+    "https://media.giphy.com/media/l0HlNQ03J5JxX2rTO/giphy.gif",
+    "https://media.giphy.com/media/3o7aCWJavAgtBzNWrS/giphy.gif",
+    "https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif",
+    "https://media.giphy.com/media/l0MYGb1LuZ3n7dRnO/giphy.gif",
+    "https://media.giphy.com/media/xUA7b2iGlcGFodFnHy/giphy.gif",
+  ];
   const [streak, setStreak] = useState(() => {
     try { return parseInt(localStorage.getItem("sa-michelle-streak") || "0", 10); } catch { return 0; }
   });
@@ -2027,13 +2044,30 @@ function MakeMichelleHappy() {
     { emoji: "dancer", label: "Dance Break", action: () => {
       if (danceMode) {
         setDanceMode(false);
+        setDanceGifs([]);
+        if (danceGifTimer.current) { clearInterval(danceGifTimer.current); danceGifTimer.current = null; }
         if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
       } else {
         setDanceMode(true);
+        setDanceGifs([]);
+        const addGif = () => {
+          const id = danceGifId.current++;
+          const src = DANCE_GIFS[Math.floor(Math.random() * DANCE_GIFS.length)];
+          const left = Math.random() * 80 + 5;
+          const top = Math.random() * 70 + 10;
+          const size = 100 + Math.random() * 120;
+          setDanceGifs(prev => [...prev, { id, src, left, top, size }]);
+        };
+        addGif();
+        danceGifTimer.current = setInterval(addGif, 15000);
         if (!audioRef.current) { audioRef.current = new Audio("/audio/e85.mp3"); audioRef.current.volume = 0.7; }
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch(() => {});
-        audioRef.current.onended = () => setDanceMode(false);
+        audioRef.current.onended = () => {
+          setDanceMode(false);
+          setDanceGifs([]);
+          if (danceGifTimer.current) { clearInterval(danceGifTimer.current); danceGifTimer.current = null; }
+        };
       }
     }},
     { emoji: "fire", label: "Streak +1", action: () => {
@@ -2081,6 +2115,16 @@ function MakeMichelleHappy() {
           <div style={{ position: "absolute", bottom: "-20%", left: "20%", width: "50vw", height: "50vw", borderRadius: "50%", filter: "blur(80px)", animation: "spotGreen 1.1s ease-in-out infinite alternate" }} />
           <div style={{ position: "absolute", top: "30%", left: "40%", width: "40vw", height: "40vw", borderRadius: "50%", filter: "blur(70px)", animation: "spotPink 0.7s ease-in-out infinite alternate-reverse" }} />
           <div style={{ position: "absolute", inset: 0, animation: "strobeFlicker 0.15s steps(2) infinite" }} />
+          {/* Dancing GIFs that accumulate over time */}
+          {danceGifs.map(g => (
+            <img key={g.id} src={g.src} alt="" style={{
+              position: "absolute", left: g.left + "%", top: g.top + "%",
+              width: g.size, height: g.size, objectFit: "contain",
+              borderRadius: 16, pointerEvents: "none",
+              animation: "gifBounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, gifFloat 3s ease-in-out infinite 0.5s",
+              opacity: 0, filter: "drop-shadow(0 0 20px rgba(255,255,255,0.3))",
+            }} />
+          ))}
           <style>{`
             @keyframes danceFlash {
               0%   { background: rgba(247,176,65,0.12); }
@@ -2112,6 +2156,14 @@ function MakeMichelleHappy() {
               0%   { background: rgba(255,255,255,0.06); }
               50%  { background: transparent; }
               100% { background: rgba(255,255,255,0.04); }
+            }
+            @keyframes gifBounceIn {
+              0%   { opacity: 0; transform: scale(0) rotate(-20deg); }
+              100% { opacity: 1; transform: scale(1) rotate(0deg); }
+            }
+            @keyframes gifFloat {
+              0%, 100% { transform: translateY(0) rotate(-2deg); }
+              50%      { transform: translateY(-15px) rotate(2deg); }
             }
           `}</style>
         </div>
