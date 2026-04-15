@@ -967,7 +967,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
         <GlowDivider color={C.amber} />
         {/* ─── STATS BAR ─── */}
         <section id="stats" style={{ padding: "48px 32px" }}>
-          <div style={{ maxWidth: 1000, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+          <div data-grid-responsive style={{ maxWidth: 1000, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
             {STATS.map((s, i) => (
               <FadeIn key={s.label} delay={i * 80}>
                 <GlassCard style={{ padding: "28px" }}>
@@ -1028,7 +1028,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
               </p>
             </FadeIn>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "start" }}>
+            <div data-grid-responsive style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "start" }}>
               {/* Audience breakdown */}
               <FadeIn>
                 <div>
@@ -1091,7 +1091,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
               <SectionTitle>Partnership Benefits</SectionTitle>
             </FadeIn>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 40 }}>
+            <div data-grid-responsive style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 40 }}>
               {[
                 { title: "Brand Positioning", items: ["Presenting partner branding at every activation", "Co-branded content across SemiAnalysis channels (200K+ subscribers)", "Association with the most trusted voice in AI infrastructure", "Premium placement — not a logo wall, a real partnership"] },
                 { title: "Audience Access", items: ["Direct access to 2,400+ decision-makers across 8 events", "Curated introductions to target accounts at every activation", "Pre- and post-event attendee data for sales pipeline building", "78% Director+ seniority — the people who sign and decide"] },
@@ -1124,7 +1124,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
             <p style={{ fontFamily: ft, fontSize: 17, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 48 }}>Flexible partnership structures designed to match your goals — from targeted single-event activations to full-season presenting partnerships.</p>
           </FadeIn>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+          <div data-grid-responsive style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
             {[
               { tier: "Select", desc: "Choose 2-3 events", features: ["Co-branded presence at selected events", "Newsletter features around event dates", "Attendee data and post-event reporting", "Dedicated AWS touchpoint at each activation"], highlight: false },
               { tier: "Premier", desc: "Full season access", features: ["Presenting partner at all 8 activations", "Year-round SemiAnalysis content integration", "Priority audience curation at every event", "Quarterly strategy sessions and reporting", "Custom activation design for flagship events"], highlight: true },
@@ -1467,14 +1467,18 @@ function InterestForm() {
 
             <button
               onClick={async () => {
+                if (!form.name || !form.email) return;
                 try {
-                  await fetch("/api/interest", {
+                  const res = await fetch("/api/interest", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ ...form, events: Array.from(form.events) }),
                   });
-                } catch {}
-                setSubmitted(true);
+                  if (!res.ok) throw new Error("Failed");
+                  setSubmitted(true);
+                } catch {
+                  setSubmitted(true);
+                }
               }}
               style={{
                 width: "100%", fontFamily: ft, fontSize: 16, fontWeight: 800, color: "#fff",
@@ -2075,7 +2079,7 @@ function MakeMichelleHappy() {
       <div style={{ maxWidth: 800, margin: "0 auto", position: "relative", zIndex: 1 }}>
         <FadeIn>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>{"\\u2728"}</div>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>{"\u2728"}</div>
             <h2 style={{ fontFamily: gf, fontSize: 36, fontWeight: 900, background: `linear-gradient(135deg, ${C.amber} 0%, ${C.coral} 40%, ${C.violet} 70%, ${C.blue} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "-1px", marginBottom: 8 }}>
               Make Michelle Happy
             </h2>
@@ -2625,6 +2629,7 @@ export default function EventsClient() {
         }
         @media (max-width: 768px) {
           section > div { padding: 0 16px !important; }
+          [data-grid-responsive] { grid-template-columns: 1fr !important; }
         }
       `}</style>
 

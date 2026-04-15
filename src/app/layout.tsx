@@ -10,14 +10,12 @@ export const metadata: Metadata = {
     title: "SemiAnalysis x AWS — Activate 2026",
     description:
       "Eight activations. Three continents. The decision-makers who matter most.",
-    images: ["/og.png"],
   },
   twitter: {
     card: "summary_large_image",
     title: "SemiAnalysis x AWS — Activate 2026",
     description:
       "Eight activations. Three continents. The decision-makers who matter most.",
-    images: ["/og.png"],
   },
 };
 
