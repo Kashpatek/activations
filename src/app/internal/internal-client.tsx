@@ -2001,6 +2001,16 @@ function MakeMichelleHappy() {
   const [streak, setStreak] = useState(() => {
     try { return parseInt(localStorage.getItem("sa-michelle-streak") || "0", 10); } catch { return 0; }
   });
+  const [pepTalk, setPepTalk] = useState("");
+  const [pepTyped, setPepTyped] = useState("");
+  const [achievement, setAchievement] = useState<string | null>(null);
+  const [wins, setWins] = useState<{ text: string; date: string }[]>(() => {
+    try { return JSON.parse(localStorage.getItem("sa-michelle-wins") || "[]"); } catch { return []; }
+  });
+  const [winInput, setWinInput] = useState("");
+  const [showWinLog, setShowWinLog] = useState(false);
+  const [powerHourLeft, setPowerHourLeft] = useState(0);
+  const powerHourTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const compliments = [
     "Michelle, you're literally the reason this partnership exists.",
@@ -2076,7 +2086,77 @@ function MakeMichelleHappy() {
       localStorage.setItem("sa-michelle-streak", String(next));
       setHype(`Streak: ${next} day${next > 1 ? "s" : ""} of being incredible`);
     }},
+    { emoji: "mic", label: "Pep Talk", action: () => {
+      const talks = [
+        "Okay Michelle. Deep breath. You are not behind. You are not missing something. You are exactly where you need to be, and the universe is conspiring to hand you a signed contract. The emails you haven't answered yet can wait. The things you're worried about — those are just tomorrow-Michelle problems, and tomorrow-Michelle is also a genius. You've already done harder things than what's in front of you right now. Keep going. You've got this.",
+        "Listen. You put 750 people on a boat. SEVEN HUNDRED AND FIFTY. Other people can't get 12 people to agree on lunch. You moved three continents of humans into one venue and made it feel intimate. That wasn't luck. That was you. So the next time imposter syndrome whispers, remind it who runs this operation.",
+        "Michelle. Stop. The thing you think you're forgetting? You're not. The thing you think is going wrong? It isn't. You are so far ahead of where anyone else would be that you've mistaken 'ahead of schedule' for 'behind.' Breathe. Close your laptop for 10 minutes. The world will still be here, and AWS will still be lucky to work with you.",
+        "Here's the truth: the best event producers in the world are people who care so much it occasionally tips into dread. That's not weakness — that's why your events are extraordinary. The dread is the signal. The signal that you're doing it right. Ride the wave. The partnership is coming. The cruise will be iconic. Your name is already whispered in rooms you haven't walked into yet.",
+        "One. Email. At. A. Time. That's it. You don't need to solve everything today. You just need to do the next right thing. And if you can't figure out what that is, the next right thing is probably getting water, standing up, and stretching. You're not a machine. You're Michelle. And Michelle is better than any machine.",
+      ];
+      const t = talks[Math.floor(Math.random() * talks.length)];
+      setPepTalk(t);
+      setPepTyped("");
+      setHype("");
+      let i = 0;
+      const typer = setInterval(() => {
+        i++;
+        setPepTyped(t.slice(0, i));
+        if (i >= t.length) clearInterval(typer);
+      }, 20);
+    }},
+    { emoji: "trophy", label: "Achievement", action: () => {
+      const achievements = [
+        "MASTER NETWORKER — 1000+ decision-makers connected",
+        "BOAT COMMANDER — Launched 2 legendary harbor cruises",
+        "INBOX DESTROYER — Responded before anyone expected",
+        "VENUE WHISPERER — Booked the unbookable space",
+        "CONFETTI CANNON — Made a conference feel like a party",
+        "SIGNATURE COLLECTOR — Closed a deal everyone said was impossible",
+        "HYPE ARCHITECT — Turned a room full of strangers into friends",
+        "CALENDAR SENSEI — Made 8 events fit into 7 months",
+        "KEYNOTE SUMMONER — Landed a speaker 3 weeks before the event",
+        "BUDGET WIZARD — Came in under without anyone noticing",
+        "INVITATION ALCHEMIST — Turned a cold contact into a VIP RSVP",
+        "CROSS-TIMEZONE OPERATOR — Coordinated 3 continents before 9am",
+      ];
+      setAchievement(achievements[Math.floor(Math.random() * achievements.length)]);
+      setTimeout(() => setAchievement(null), 5000);
+    }},
+    { emoji: "star", label: "Log a Win", action: () => {
+      setShowWinLog(true);
+    }},
+    { emoji: "clock", label: powerHourLeft > 0 ? `Focus: ${Math.floor(powerHourLeft/60)}:${String(powerHourLeft%60).padStart(2,"0")}` : "Power Hour", action: () => {
+      if (powerHourLeft > 0) {
+        if (powerHourTimer.current) clearInterval(powerHourTimer.current);
+        setPowerHourLeft(0);
+        setHype("");
+      } else {
+        setPowerHourLeft(25 * 60);
+        setHype("Power Hour started — 25 min of deep focus. You got this.");
+        powerHourTimer.current = setInterval(() => {
+          setPowerHourLeft(prev => {
+            if (prev <= 1) {
+              if (powerHourTimer.current) clearInterval(powerHourTimer.current);
+              setHype("Power Hour complete. You just CRUSHED 25 minutes of focus.");
+              setConfetti(true);
+              setTimeout(() => setConfetti(false), 3000);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      }
+    }},
   ];
+
+  const addWin = () => {
+    if (!winInput.trim()) return;
+    const next = [{ text: winInput.trim(), date: new Date().toLocaleDateString() }, ...wins].slice(0, 50);
+    setWins(next);
+    localStorage.setItem("sa-michelle-wins", JSON.stringify(next));
+    setWinInput("");
+  };
 
   return (
     <section style={{ padding: "80px 32px", position: "relative", overflow: "hidden" }}>
@@ -2201,6 +2281,10 @@ function MakeMichelleHappy() {
                   g.emoji === "confetti" ? "\uD83C\uDF89" :
                   g.emoji === "wind" ? "\uD83C\uDF2C\uFE0F" :
                   g.emoji === "dancer" ? "\uD83D\uDC83" :
+                  g.emoji === "mic" ? "\uD83C\uDFA4" :
+                  g.emoji === "trophy" ? "\uD83C\uDFC6" :
+                  g.emoji === "star" ? "\u2B50" :
+                  g.emoji === "clock" ? "\u23F1\uFE0F" :
                   "\uD83D\uDD25"
                 }</span>
                 {g.label}
@@ -2239,6 +2323,72 @@ function MakeMichelleHappy() {
               </div>
             </GlassCard>
           </FadeIn>
+        )}
+
+        {/* Pep Talk with typewriter */}
+        {pepTalk && (
+          <FadeIn>
+            <GlassCard style={{ padding: "32px 36px", marginTop: 20, background: `linear-gradient(135deg, ${C.violet}10, ${C.blue}08)`, border: `1px solid ${C.violet}30` }}>
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.violet, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12, fontWeight: 700 }}>Pep Talk</div>
+              <div style={{ fontFamily: ft, fontSize: 17, color: C.tx, lineHeight: 1.8 }}>
+                {pepTyped}<span style={{ opacity: pepTyped.length < pepTalk.length ? 1 : 0, color: C.violet }}>|</span>
+              </div>
+            </GlassCard>
+          </FadeIn>
+        )}
+
+        {/* Win Log input */}
+        {showWinLog && (
+          <FadeIn>
+            <GlassCard style={{ padding: "24px 28px", marginTop: 20, background: `linear-gradient(135deg, ${C.amber}0A, ${C.coral}06)`, border: `1px solid ${C.amber}30` }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", fontWeight: 700 }}>Win Log</div>
+                <button onClick={() => setShowWinLog(false)} style={{ background: "none", border: "none", color: C.txd, cursor: "pointer", fontSize: 18 }}>{"\u00D7"}</button>
+              </div>
+              <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                <input
+                  value={winInput}
+                  onChange={e => setWinInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") addWin(); }}
+                  placeholder="What did you crush today?"
+                  style={{ flex: 1, padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 10, color: C.tx, fontFamily: ft, fontSize: 14, outline: "none" }}
+                />
+                <button onClick={addWin} style={{ fontFamily: ft, fontSize: 13, fontWeight: 800, color: "#060608", background: `linear-gradient(135deg, ${C.amber}, #E8A020)`, padding: "0 20px", borderRadius: 10, border: "none", cursor: "pointer" }}>
+                  Log it
+                </button>
+              </div>
+              {wins.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 260, overflowY: "auto" }}>
+                  {wins.map((w, i) => (
+                    <div key={i} style={{ display: "flex", gap: 12, padding: "10px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 8, border: `1px solid ${C.glassBorder}` }}>
+                      <span style={{ fontFamily: mn, fontSize: 10, color: C.amber, flexShrink: 0, paddingTop: 2 }}>{w.date}</span>
+                      <span style={{ fontFamily: ft, fontSize: 13, color: C.tx, lineHeight: 1.5 }}>{w.text}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {wins.length === 0 && <div style={{ fontFamily: ft, fontSize: 13, color: C.txd, textAlign: "center", padding: "12px 0" }}>No wins logged yet. Start small.</div>}
+            </GlassCard>
+          </FadeIn>
+        )}
+
+        {/* Achievement popup */}
+        {achievement && (
+          <div style={{ position: "fixed", top: 100, left: "50%", transform: "translateX(-50%)", zIndex: 300, pointerEvents: "none", animation: "achievementSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
+            <div style={{ background: "linear-gradient(135deg, #0a0a12, #1a1428)", border: `2px solid ${C.amber}`, borderRadius: 14, padding: "16px 28px", boxShadow: `0 8px 40px ${C.amber}40, 0 0 0 1px ${C.amber}60`, display: "flex", alignItems: "center", gap: 14 }}>
+              <span style={{ fontSize: 32 }}>{"\uD83C\uDFC6"}</span>
+              <div>
+                <div style={{ fontFamily: mn, fontSize: 9, color: C.amber, letterSpacing: "2.5px", fontWeight: 700 }}>ACHIEVEMENT UNLOCKED</div>
+                <div style={{ fontFamily: ft, fontSize: 15, fontWeight: 800, color: C.tx, marginTop: 2 }}>{achievement}</div>
+              </div>
+            </div>
+            <style>{`
+              @keyframes achievementSlide {
+                0%   { opacity: 0; transform: translateX(-50%) translateY(-40px) scale(0.8); }
+                100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+              }
+            `}</style>
+          </div>
         )}
 
         {/* Daily affirmations */}
