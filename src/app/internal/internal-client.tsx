@@ -2001,16 +2001,6 @@ function MakeMichelleHappy() {
   const [streak, setStreak] = useState(() => {
     try { return parseInt(localStorage.getItem("sa-michelle-streak") || "0", 10); } catch { return 0; }
   });
-  const [pepTalk, setPepTalk] = useState("");
-  const [pepTyped, setPepTyped] = useState("");
-  const [achievement, setAchievement] = useState<string | null>(null);
-  const [wins, setWins] = useState<{ text: string; date: string }[]>(() => {
-    try { return JSON.parse(localStorage.getItem("sa-michelle-wins") || "[]"); } catch { return []; }
-  });
-  const [winInput, setWinInput] = useState("");
-  const [showWinLog, setShowWinLog] = useState(false);
-  const [powerHourLeft, setPowerHourLeft] = useState(0);
-  const powerHourTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const compliments = [
     "Michelle, you're literally the reason this partnership exists.",
@@ -2086,77 +2076,7 @@ function MakeMichelleHappy() {
       localStorage.setItem("sa-michelle-streak", String(next));
       setHype(`Streak: ${next} day${next > 1 ? "s" : ""} of being incredible`);
     }},
-    { emoji: "mic", label: "Pep Talk", action: () => {
-      const talks = [
-        "Okay Michelle. Deep breath. You are not behind. You are not missing something. You are exactly where you need to be, and the universe is conspiring to hand you a signed contract. The emails you haven't answered yet can wait. The things you're worried about — those are just tomorrow-Michelle problems, and tomorrow-Michelle is also a genius. You've already done harder things than what's in front of you right now. Keep going. You've got this.",
-        "Listen. You put 750 people on a boat. SEVEN HUNDRED AND FIFTY. Other people can't get 12 people to agree on lunch. You moved three continents of humans into one venue and made it feel intimate. That wasn't luck. That was you. So the next time imposter syndrome whispers, remind it who runs this operation.",
-        "Michelle. Stop. The thing you think you're forgetting? You're not. The thing you think is going wrong? It isn't. You are so far ahead of where anyone else would be that you've mistaken 'ahead of schedule' for 'behind.' Breathe. Close your laptop for 10 minutes. The world will still be here, and AWS will still be lucky to work with you.",
-        "Here's the truth: the best event producers in the world are people who care so much it occasionally tips into dread. That's not weakness — that's why your events are extraordinary. The dread is the signal. The signal that you're doing it right. Ride the wave. The partnership is coming. The cruise will be iconic. Your name is already whispered in rooms you haven't walked into yet.",
-        "One. Email. At. A. Time. That's it. You don't need to solve everything today. You just need to do the next right thing. And if you can't figure out what that is, the next right thing is probably getting water, standing up, and stretching. You're not a machine. You're Michelle. And Michelle is better than any machine.",
-      ];
-      const t = talks[Math.floor(Math.random() * talks.length)];
-      setPepTalk(t);
-      setPepTyped("");
-      setHype("");
-      let i = 0;
-      const typer = setInterval(() => {
-        i++;
-        setPepTyped(t.slice(0, i));
-        if (i >= t.length) clearInterval(typer);
-      }, 20);
-    }},
-    { emoji: "trophy", label: "Achievement", action: () => {
-      const achievements = [
-        "MASTER NETWORKER — 1000+ decision-makers connected",
-        "BOAT COMMANDER — Launched 2 legendary harbor cruises",
-        "INBOX DESTROYER — Responded before anyone expected",
-        "VENUE WHISPERER — Booked the unbookable space",
-        "CONFETTI CANNON — Made a conference feel like a party",
-        "SIGNATURE COLLECTOR — Closed a deal everyone said was impossible",
-        "HYPE ARCHITECT — Turned a room full of strangers into friends",
-        "CALENDAR SENSEI — Made 8 events fit into 7 months",
-        "KEYNOTE SUMMONER — Landed a speaker 3 weeks before the event",
-        "BUDGET WIZARD — Came in under without anyone noticing",
-        "INVITATION ALCHEMIST — Turned a cold contact into a VIP RSVP",
-        "CROSS-TIMEZONE OPERATOR — Coordinated 3 continents before 9am",
-      ];
-      setAchievement(achievements[Math.floor(Math.random() * achievements.length)]);
-      setTimeout(() => setAchievement(null), 5000);
-    }},
-    { emoji: "star", label: "Log a Win", action: () => {
-      setShowWinLog(true);
-    }},
-    { emoji: "clock", label: powerHourLeft > 0 ? `Focus: ${Math.floor(powerHourLeft/60)}:${String(powerHourLeft%60).padStart(2,"0")}` : "Power Hour", action: () => {
-      if (powerHourLeft > 0) {
-        if (powerHourTimer.current) clearInterval(powerHourTimer.current);
-        setPowerHourLeft(0);
-        setHype("");
-      } else {
-        setPowerHourLeft(25 * 60);
-        setHype("Power Hour started — 25 min of deep focus. You got this.");
-        powerHourTimer.current = setInterval(() => {
-          setPowerHourLeft(prev => {
-            if (prev <= 1) {
-              if (powerHourTimer.current) clearInterval(powerHourTimer.current);
-              setHype("Power Hour complete. You just CRUSHED 25 minutes of focus.");
-              setConfetti(true);
-              setTimeout(() => setConfetti(false), 3000);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      }
-    }},
   ];
-
-  const addWin = () => {
-    if (!winInput.trim()) return;
-    const next = [{ text: winInput.trim(), date: new Date().toLocaleDateString() }, ...wins].slice(0, 50);
-    setWins(next);
-    localStorage.setItem("sa-michelle-wins", JSON.stringify(next));
-    setWinInput("");
-  };
 
   return (
     <section style={{ padding: "80px 32px", position: "relative", overflow: "hidden" }}>
@@ -2281,10 +2201,6 @@ function MakeMichelleHappy() {
                   g.emoji === "confetti" ? "\uD83C\uDF89" :
                   g.emoji === "wind" ? "\uD83C\uDF2C\uFE0F" :
                   g.emoji === "dancer" ? "\uD83D\uDC83" :
-                  g.emoji === "mic" ? "\uD83C\uDFA4" :
-                  g.emoji === "trophy" ? "\uD83C\uDFC6" :
-                  g.emoji === "star" ? "\u2B50" :
-                  g.emoji === "clock" ? "\u23F1\uFE0F" :
                   "\uD83D\uDD25"
                 }</span>
                 {g.label}
@@ -2325,71 +2241,6 @@ function MakeMichelleHappy() {
           </FadeIn>
         )}
 
-        {/* Pep Talk with typewriter */}
-        {pepTalk && (
-          <FadeIn>
-            <GlassCard style={{ padding: "32px 36px", marginTop: 20, background: `linear-gradient(135deg, ${C.violet}10, ${C.blue}08)`, border: `1px solid ${C.violet}30` }}>
-              <div style={{ fontFamily: mn, fontSize: 10, color: C.violet, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12, fontWeight: 700 }}>Pep Talk</div>
-              <div style={{ fontFamily: ft, fontSize: 17, color: C.tx, lineHeight: 1.8 }}>
-                {pepTyped}<span style={{ opacity: pepTyped.length < pepTalk.length ? 1 : 0, color: C.violet }}>|</span>
-              </div>
-            </GlassCard>
-          </FadeIn>
-        )}
-
-        {/* Win Log input */}
-        {showWinLog && (
-          <FadeIn>
-            <GlassCard style={{ padding: "24px 28px", marginTop: 20, background: `linear-gradient(135deg, ${C.amber}0A, ${C.coral}06)`, border: `1px solid ${C.amber}30` }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", fontWeight: 700 }}>Win Log</div>
-                <button onClick={() => setShowWinLog(false)} style={{ background: "none", border: "none", color: C.txd, cursor: "pointer", fontSize: 18 }}>{"\u00D7"}</button>
-              </div>
-              <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-                <input
-                  value={winInput}
-                  onChange={e => setWinInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter") addWin(); }}
-                  placeholder="What did you crush today?"
-                  style={{ flex: 1, padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 10, color: C.tx, fontFamily: ft, fontSize: 14, outline: "none" }}
-                />
-                <button onClick={addWin} style={{ fontFamily: ft, fontSize: 13, fontWeight: 800, color: "#060608", background: `linear-gradient(135deg, ${C.amber}, #E8A020)`, padding: "0 20px", borderRadius: 10, border: "none", cursor: "pointer" }}>
-                  Log it
-                </button>
-              </div>
-              {wins.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 260, overflowY: "auto" }}>
-                  {wins.map((w, i) => (
-                    <div key={i} style={{ display: "flex", gap: 12, padding: "10px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 8, border: `1px solid ${C.glassBorder}` }}>
-                      <span style={{ fontFamily: mn, fontSize: 10, color: C.amber, flexShrink: 0, paddingTop: 2 }}>{w.date}</span>
-                      <span style={{ fontFamily: ft, fontSize: 13, color: C.tx, lineHeight: 1.5 }}>{w.text}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {wins.length === 0 && <div style={{ fontFamily: ft, fontSize: 13, color: C.txd, textAlign: "center", padding: "12px 0" }}>No wins logged yet. Start small.</div>}
-            </GlassCard>
-          </FadeIn>
-        )}
-
-        {/* Achievement popup */}
-        {achievement && (
-          <div style={{ position: "fixed", top: 100, left: "50%", transform: "translateX(-50%)", zIndex: 300, pointerEvents: "none", animation: "achievementSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
-            <div style={{ background: "linear-gradient(135deg, #0a0a12, #1a1428)", border: `2px solid ${C.amber}`, borderRadius: 14, padding: "16px 28px", boxShadow: `0 8px 40px ${C.amber}40, 0 0 0 1px ${C.amber}60`, display: "flex", alignItems: "center", gap: 14 }}>
-              <span style={{ fontSize: 32 }}>{"\uD83C\uDFC6"}</span>
-              <div>
-                <div style={{ fontFamily: mn, fontSize: 9, color: C.amber, letterSpacing: "2.5px", fontWeight: 700 }}>ACHIEVEMENT UNLOCKED</div>
-                <div style={{ fontFamily: ft, fontSize: 15, fontWeight: 800, color: C.tx, marginTop: 2 }}>{achievement}</div>
-              </div>
-            </div>
-            <style>{`
-              @keyframes achievementSlide {
-                0%   { opacity: 0; transform: translateX(-50%) translateY(-40px) scale(0.8); }
-                100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-              }
-            `}</style>
-          </div>
-        )}
 
         {/* Daily affirmations */}
         <FadeIn delay={200}>
@@ -2811,11 +2662,504 @@ function InternalAnalyticsTab() {
   );
 }
 
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL OPS: MEETING PREP GENERATOR
+   ═══════════════════════════════════════════════════════════ */
+function MeetingPrep() {
+  const stages = [
+    { key: "discovery", label: "Discovery Call" },
+    { key: "pitch", label: "Pitch Meeting" },
+    { key: "negotiation", label: "Negotiation" },
+    { key: "closing", label: "Closing Call" },
+    { key: "renewal", label: "Renewal / Follow-up" },
+  ];
+  const focusAreas = [
+    { key: "marketing", label: "Marketing / Brand" },
+    { key: "engineering", label: "Engineering / Product" },
+    { key: "executive", label: "Executive / C-Suite" },
+    { key: "developer", label: "Developer Relations" },
+    { key: "partnerships", label: "Partnerships / BD" },
+  ];
+
+  const [stage, setStage] = useState(stages[0].key);
+  const [focus, setFocus] = useState(focusAreas[0].key);
+  const [contactName, setContactName] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const brief = useMemo(() => {
+    const openingByStage: Record<string, string> = {
+      discovery: "Thanks for making time. Before we dive in, I'd love to hear what AWS is optimizing for in event marketing this year — is it developer reach, enterprise pipeline, or brand presence in specific verticals?",
+      pitch: "We put together a 2026 calendar of 8 activations across 3 continents specifically built around the AI infrastructure buying community. I'll walk through the calendar, then we can focus on the 2-3 events that align with your priorities.",
+      negotiation: "I want to align on scope before we finalize numbers — let's confirm the tier structure, presenting-partner rights, and what happens if we exceed attendance targets on the flagship events.",
+      closing: "Ready to close? Here's what I need from you to move forward: signed partnership agreement, logo assets, and a single point of contact for creative review. I'll handle the rest.",
+      renewal: "Quick recap of what we did and what worked — then I want to talk about where we go bigger in 2027.",
+    };
+
+    const statsByFocus: Record<string, string[]> = {
+      marketing: [
+        "SemiAnalysis newsletter: 200K subscribers, >50% open rate, $0.15 CPM equivalent — better than any paid channel you're running.",
+        "1M+ YouTube views/month, 78% watch-completion on deep-dive technical content.",
+        "Average attendee seniority at our events: 68% Director+ (vs. 22% industry standard for conference sponsorships).",
+      ],
+      engineering: [
+        "NeurIPS 2025 boat: 680 of 750 attendees were decision-makers on infrastructure purchases. 38% academia, 18% Big Tech, 12% frontier labs.",
+        "Our events reach the engineers who write the build-vs-buy memo. Cost-per-decision-maker: $40-80 vs $150-300 for traditional sponsorships.",
+        "Zero CVP speakers we've invited have declined. That's a signal about the quality of the room.",
+      ],
+      executive: [
+        "$38M+ in pipeline sourced from our 2025 activations, according to partner-reported attribution.",
+        "94% attendee return rate across flagship events — we don't rent attention, we build relationships.",
+        "The SemiAnalysis brand is cited by Bloomberg, FT, and The Information. Association benefits both ways.",
+      ],
+      developer: [
+        "38% of NeurIPS 2025 attendees were active ML researchers — exactly the audience AWS wants to evangelize Bedrock, SageMaker, and Graviton to.",
+        "ICML 2026 is designed as a research-first activation: poster sessions, roundtables, no sales pitches. Developers notice.",
+        "OCP Global Summit includes live demos of custom silicon — natural home for Graviton/Trainium/Inferentia storytelling.",
+      ],
+      partnerships: [
+        "We've co-produced with SAIL/ReadSail (NeurIPS), Raise (Paris), and the Computex organizing committee — we know how to navigate co-branding and joint-customer situations.",
+        "Exclusivity structure: AWS becomes category-exclusive cloud partner for 6 of the 8 events, with named rights at 2 flagships.",
+        "Partnership renewal rate among our multi-event partners in 2025: 100%.",
+      ],
+    };
+
+    const objectionsByStage: Record<string, { q: string; a: string }[]> = {
+      discovery: [
+        { q: "We already do our own events (re:Invent, Summits).", a: "Totally — and those are scale plays. Ours are different: they're the event-WITHIN-the-event, where the senior folks go when they're skipping your expo floor. We're additive, not competitive." },
+        { q: "Budget is set for the year.", a: "Understood. Tell me what's funded — I can show you which of our activations slot against existing line items. We've fit into MDF, co-op marketing, analyst relations, and partner marketing depending on the team." },
+      ],
+      pitch: [
+        { q: "Can we pick just one event?", a: "Yes — Select tier is 2-3 events. I'd honestly recommend against just one, because a single event is a brand statement; two is a commitment, and the conversations compound across the calendar." },
+        { q: "How is this different from sponsoring the conference directly?", a: "Three things: audience quality (we curate to decision-makers, not the whole floor), format (intimate vs. expo), and our 200K-subscriber amplification. You can sponsor the conference AND do our activation — they don't cancel out." },
+      ],
+      negotiation: [
+        { q: "We need exclusivity in the cloud category.", a: "Doable on 6 of 8. MLSys and OCP we keep open for the open-source hardware/systems community. The 6 flagships — NeurIPS, ICML, Computex, Raise, Yotta, COLM — we can do category-exclusive cloud." },
+        { q: "Can we reduce the Premier tier number?", a: "The number is driven by venue, AV, and headcount cost for a 300-400 person activation. What we CAN flex is scope — drop one event and rebalance across the other seven, or downsize the NeurIPS vessel by 100 seats." },
+      ],
+      closing: [
+        { q: "We still need legal review.", a: "Send the redlines whenever, I'll turn them in 48 hours. In the meantime, can we kick off creative? I need AWS logo assets and a single POC to start building invitations — that buys us 2 weeks without a signed contract." },
+        { q: "Can we delay the deposit?", a: "Yes for flagships with >90 days lead time. For Computex (Jun) and MLSys (May) I need deposit committed this week to hold the venues — happy to put that in a separate SOW if it helps the procurement cycle." },
+      ],
+      renewal: [
+        { q: "The ROI wasn't what we hoped.", a: "Let's look at the attribution model — was it last-touch or multi-touch? Events are mid-funnel by design. I'll pull the actual pipeline data from the 2025 attendee list and we can reconcile." },
+        { q: "We want to go smaller next year.", a: "Totally fair — let's pick the 2 events that actually sourced pipeline and double down there. Leaner is fine. What we shouldn't do is spray across all 8 at half-tier." },
+      ],
+    };
+
+    const asks: Record<string, string> = {
+      discovery: "The ask: 30 more minutes next week to walk through a tailored calendar. I'll send a follow-up with the 2-3 events I'd recommend based on this conversation.",
+      pitch: "The ask: a soft commitment to 2-3 events by end of week. I'm not asking for signed paper yet — just a ranked list of interest so I can reserve placeholder sponsorship slots before other partners call.",
+      negotiation: "The ask: verbal agreement on tier + scope today, paper by end of next week. I need that to lock venues (especially Computex and NeurIPS).",
+      closing: "The ask: signed agreement + first invoice paid within 10 business days. I'll spin up the creative kickoff call the moment we receive payment.",
+      renewal: "The ask: let's schedule a 2027 planning session before Q1 ends. I'll bring proposed calendar + learnings report.",
+    };
+
+    return {
+      opening: openingByStage[stage],
+      stats: statsByFocus[focus] || [],
+      objections: objectionsByStage[stage] || [],
+      ask: asks[stage],
+    };
+  }, [stage, focus]);
+
+  const fullText = `MEETING PREP — ${contactName || "[Contact]"} | ${stages.find(s => s.key === stage)?.label} | ${focusAreas.find(f => f.key === focus)?.label}\n\nOPENING:\n${brief.opening}\n\nKEY STATS TO DROP:\n${brief.stats.map((s, i) => `${i+1}. ${s}`).join("\n")}\n\nLIKELY OBJECTIONS:\n${brief.objections.map(o => `Q: ${o.q}\nA: ${o.a}`).join("\n\n")}\n\nTHE ASK:\n${brief.ask}`;
+
+  return (
+    <section style={{ padding: "80px 32px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <SectionLabel>Meeting Prep</SectionLabel>
+            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          </div>
+          <SectionTitle>AWS Call Briefing</SectionTitle>
+          <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 620, marginBottom: 32 }}>
+            15 minutes before your AWS call, pick the meeting stage and your contact's focus area. You'll get opening angles, stats to drop, anticipated objections with responses, and the specific ask.
+          </p>
+        </FadeIn>
+
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(260px, 340px) 1fr", gap: 32 }}>
+          <FadeIn>
+            <div>
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, fontWeight: 700 }}>Contact Name</div>
+              <input value={contactName} onChange={e => setContactName(e.target.value)} placeholder="e.g. Sarah Chen, AWS"
+                style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 10, color: C.tx, fontFamily: ft, fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 20 }} />
+
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, fontWeight: 700 }}>Meeting Stage</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
+                {stages.map(s => (
+                  <button key={s.key} onClick={() => setStage(s.key)} style={{
+                    fontFamily: ft, fontSize: 13, fontWeight: stage === s.key ? 700 : 500,
+                    color: stage === s.key ? "#060608" : C.txm, textAlign: "left",
+                    background: stage === s.key ? `linear-gradient(135deg, ${C.amber}, #E8A020)` : "rgba(255,255,255,0.03)",
+                    border: `1px solid ${stage === s.key ? C.amber : C.glassBorder}`,
+                    borderRadius: 10, padding: "10px 14px", cursor: "pointer", transition: "all 0.2s ease",
+                  }}>{s.label}</button>
+                ))}
+              </div>
+
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, fontWeight: 700 }}>Contact Focus</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {focusAreas.map(f => (
+                  <button key={f.key} onClick={() => setFocus(f.key)} style={{
+                    fontFamily: ft, fontSize: 13, fontWeight: focus === f.key ? 700 : 500,
+                    color: focus === f.key ? "#060608" : C.txm, textAlign: "left",
+                    background: focus === f.key ? `linear-gradient(135deg, ${C.violet}, ${C.violet}cc)` : "rgba(255,255,255,0.03)",
+                    border: `1px solid ${focus === f.key ? C.violet : C.glassBorder}`,
+                    borderRadius: 10, padding: "10px 14px", cursor: "pointer", transition: "all 0.2s ease",
+                  }}>{f.label}</button>
+                ))}
+              </div>
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={100}>
+            <GlassCard style={{ padding: "28px 32px", position: "relative" }}>
+              <button onClick={() => { navigator.clipboard.writeText(fullText); setCopied(true); setTimeout(() => setCopied(false), 2000); }} style={{
+                position: "absolute", top: 16, right: 16,
+                fontFamily: mn, fontSize: 10, fontWeight: 700,
+                color: copied ? "#4ADE80" : C.amber, background: copied ? "#4ADE8015" : C.amber + "10",
+                border: `1px solid ${copied ? "#4ADE8030" : C.amber + "30"}`,
+                borderRadius: 8, padding: "6px 14px", cursor: "pointer",
+              }}>{copied ? "Copied!" : "Copy Brief"}</button>
+
+              <div style={{ marginBottom: 22 }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8, fontWeight: 700 }}>Opening Angle</div>
+                <div style={{ fontFamily: ft, fontSize: 14, color: C.tx, lineHeight: 1.7 }}>{brief.opening}</div>
+              </div>
+
+              <div style={{ marginBottom: 22 }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, fontWeight: 700 }}>Key Stats to Drop</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {brief.stats.map((s, i) => (
+                    <div key={i} style={{ display: "flex", gap: 12, padding: "10px 14px", background: "rgba(255,255,255,0.02)", borderRadius: 10, border: `1px solid ${C.glassBorder}` }}>
+                      <span style={{ fontFamily: mn, fontSize: 11, color: C.amber, flexShrink: 0, fontWeight: 700 }}>{i + 1}</span>
+                      <span style={{ fontFamily: ft, fontSize: 13, color: C.txm, lineHeight: 1.6 }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 22 }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.coral, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, fontWeight: 700 }}>Likely Objections + Responses</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {brief.objections.map((o, i) => (
+                    <div key={i} style={{ padding: "12px 16px", background: C.coral + "06", borderRadius: 10, border: `1px solid ${C.coral}20` }}>
+                      <div style={{ fontFamily: mn, fontSize: 10, color: C.coral, letterSpacing: "1px", marginBottom: 6, fontWeight: 700 }}>Q</div>
+                      <div style={{ fontFamily: ft, fontSize: 13, color: C.tx, fontStyle: "italic", marginBottom: 10 }}>"{o.q}"</div>
+                      <div style={{ fontFamily: mn, fontSize: 10, color: "#4ADE80", letterSpacing: "1px", marginBottom: 6, fontWeight: 700 }}>A</div>
+                      <div style={{ fontFamily: ft, fontSize: 13, color: C.txm, lineHeight: 1.6 }}>{o.a}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ padding: "16px 20px", background: `linear-gradient(135deg, ${C.amber}10, ${C.violet}08)`, borderRadius: 12, border: `1px solid ${C.amber}30` }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8, fontWeight: 700 }}>The Ask</div>
+                <div style={{ fontFamily: ft, fontSize: 14, color: C.tx, lineHeight: 1.7, fontWeight: 600 }}>{brief.ask}</div>
+              </div>
+            </GlassCard>
+          </FadeIn>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL OPS: AWS CONTACT CRM / FOLLOW-UP TRACKER
+   ═══════════════════════════════════════════════════════════ */
+type Contact = { id: number; name: string; org: string; role: string; eventInterest: string; lastContact: string; nextStep: string; notes: string; stage: string };
+
+function ContactCRM() {
+  const [contacts, setContacts] = useState<Contact[]>(() => {
+    try { return JSON.parse(localStorage.getItem("sa-crm") || "[]"); } catch { return []; }
+  });
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<Contact | null>(null);
+  const [draft, setDraft] = useState<Contact>({ id: 0, name: "", org: "AWS", role: "", eventInterest: "", lastContact: new Date().toISOString().slice(0, 10), nextStep: "", notes: "", stage: "Discovery" });
+
+  const stages = ["Discovery", "Pitch", "Negotiation", "Closing", "Signed", "Cold"];
+  const stageColors: Record<string, string> = {
+    Discovery: C.txm, Pitch: C.blue, Negotiation: C.violet, Closing: C.amber, Signed: "#4ADE80", Cold: C.txd,
+  };
+
+  const save = (list: Contact[]) => {
+    setContacts(list);
+    localStorage.setItem("sa-crm", JSON.stringify(list));
+  };
+
+  const submit = () => {
+    if (!draft.name.trim()) return;
+    if (editing) {
+      save(contacts.map(c => c.id === editing.id ? draft : c));
+    } else {
+      save([{ ...draft, id: Date.now() }, ...contacts]);
+    }
+    setShowForm(false);
+    setEditing(null);
+    setDraft({ id: 0, name: "", org: "AWS", role: "", eventInterest: "", lastContact: new Date().toISOString().slice(0, 10), nextStep: "", notes: "", stage: "Discovery" });
+  };
+
+  const remove = (id: number) => save(contacts.filter(c => c.id !== id));
+  const bumpLastContact = (id: number) => save(contacts.map(c => c.id === id ? { ...c, lastContact: new Date().toISOString().slice(0, 10) } : c));
+
+  const daysSince = (iso: string) => {
+    const d = new Date(iso).getTime();
+    return Math.floor((Date.now() - d) / (1000 * 60 * 60 * 24));
+  };
+
+  const urgencyColor = (days: number, stage: string) => {
+    if (stage === "Signed") return "#4ADE80";
+    if (stage === "Cold") return C.txd;
+    if (days >= 14) return C.coral;
+    if (days >= 7) return C.amber;
+    return "#4ADE80";
+  };
+
+  const sorted = [...contacts].sort((a, b) => {
+    if (a.stage === "Signed" && b.stage !== "Signed") return 1;
+    if (b.stage === "Signed" && a.stage !== "Signed") return -1;
+    return daysSince(b.lastContact) - daysSince(a.lastContact);
+  });
+
+  const overdueCount = contacts.filter(c => c.stage !== "Signed" && c.stage !== "Cold" && daysSince(c.lastContact) >= 7).length;
+
+  return (
+    <section style={{ padding: "80px 32px", background: "rgba(255,255,255,0.01)" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <SectionLabel>Contact CRM</SectionLabel>
+            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          </div>
+          <SectionTitle>Follow-up Tracker</SectionTitle>
+          <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 620, marginBottom: 20 }}>
+            Log every AWS contact and conversation. Rows turn amber after 7 days, coral after 14 — so nobody falls through the cracks.
+          </p>
+          {overdueCount > 0 && (
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 16px", background: C.coral + "10", border: `1px solid ${C.coral}30`, borderRadius: 20, marginBottom: 24 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: C.coral }} />
+              <span style={{ fontFamily: mn, fontSize: 11, color: C.coral, fontWeight: 700 }}>{overdueCount} contact{overdueCount > 1 ? "s" : ""} overdue for outreach</span>
+            </div>
+          )}
+        </FadeIn>
+
+        <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+          <button onClick={() => { setEditing(null); setDraft({ id: 0, name: "", org: "AWS", role: "", eventInterest: "", lastContact: new Date().toISOString().slice(0, 10), nextStep: "", notes: "", stage: "Discovery" }); setShowForm(true); }} style={{
+            fontFamily: ft, fontSize: 13, fontWeight: 800, color: "#060608",
+            background: `linear-gradient(135deg, ${C.amber}, #E8A020)`,
+            padding: "10px 24px", borderRadius: 10, border: "none", cursor: "pointer",
+          }}>+ Add Contact</button>
+        </div>
+
+        {showForm && (
+          <FadeIn>
+            <GlassCard style={{ padding: "24px 28px", marginBottom: 20, border: `1px solid ${C.amber}30` }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                <input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} placeholder="Name *" style={{ padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, color: C.tx, fontFamily: ft, fontSize: 13, outline: "none" }} />
+                <input value={draft.role} onChange={e => setDraft({ ...draft, role: e.target.value })} placeholder="Role (e.g. VP Marketing)" style={{ padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, color: C.tx, fontFamily: ft, fontSize: 13, outline: "none" }} />
+                <input value={draft.org} onChange={e => setDraft({ ...draft, org: e.target.value })} placeholder="Org" style={{ padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, color: C.tx, fontFamily: ft, fontSize: 13, outline: "none" }} />
+                <input value={draft.eventInterest} onChange={e => setDraft({ ...draft, eventInterest: e.target.value })} placeholder="Event interest (e.g. NeurIPS + COLM)" style={{ padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, color: C.tx, fontFamily: ft, fontSize: 13, outline: "none" }} />
+                <input type="date" value={draft.lastContact} onChange={e => setDraft({ ...draft, lastContact: e.target.value })} style={{ padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, color: C.tx, fontFamily: ft, fontSize: 13, outline: "none" }} />
+                <select value={draft.stage} onChange={e => setDraft({ ...draft, stage: e.target.value })} style={{ padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, color: C.tx, fontFamily: ft, fontSize: 13, outline: "none" }}>
+                  {stages.map(s => <option key={s} value={s} style={{ background: C.bg }}>{s}</option>)}
+                </select>
+              </div>
+              <input value={draft.nextStep} onChange={e => setDraft({ ...draft, nextStep: e.target.value })} placeholder="Next step" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, color: C.tx, fontFamily: ft, fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 12 }} />
+              <textarea value={draft.notes} onChange={e => setDraft({ ...draft, notes: e.target.value })} placeholder="Notes from conversation..." rows={3} style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, color: C.tx, fontFamily: ft, fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 12, resize: "vertical" }} />
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={submit} style={{ fontFamily: ft, fontSize: 13, fontWeight: 800, color: "#060608", background: `linear-gradient(135deg, ${C.amber}, #E8A020)`, padding: "10px 24px", borderRadius: 10, border: "none", cursor: "pointer" }}>
+                  {editing ? "Save Changes" : "Add Contact"}
+                </button>
+                <button onClick={() => { setShowForm(false); setEditing(null); }} style={{ fontFamily: ft, fontSize: 13, fontWeight: 600, color: C.txm, background: "transparent", border: `1px solid ${C.glassBorder}`, padding: "10px 24px", borderRadius: 10, cursor: "pointer" }}>Cancel</button>
+              </div>
+            </GlassCard>
+          </FadeIn>
+        )}
+
+        {contacts.length === 0 ? (
+          <GlassCard style={{ padding: "40px 24px", textAlign: "center" }}>
+            <div style={{ fontFamily: ft, fontSize: 14, color: C.txm }}>No contacts logged yet. Add your first AWS contact above.</div>
+          </GlassCard>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {sorted.map(c => {
+              const days = daysSince(c.lastContact);
+              const color = urgencyColor(days, c.stage);
+              const stageColor = stageColors[c.stage] || C.txm;
+              return (
+                <GlassCard key={c.id} style={{ padding: "18px 22px", borderLeft: `3px solid ${color}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
+                        <span style={{ fontFamily: ft, fontSize: 16, fontWeight: 800, color: C.tx }}>{c.name}</span>
+                        {c.role && <span style={{ fontFamily: ft, fontSize: 13, color: C.txm }}>— {c.role}</span>}
+                        {c.org && <span style={{ fontFamily: mn, fontSize: 11, color: C.txd }}>@ {c.org}</span>}
+                        <span style={{ fontFamily: mn, fontSize: 9, color: stageColor, background: stageColor + "15", border: `1px solid ${stageColor}30`, borderRadius: 20, padding: "2px 10px", letterSpacing: "1px", fontWeight: 700 }}>{c.stage}</span>
+                      </div>
+                      {c.eventInterest && <div style={{ fontFamily: ft, fontSize: 12, color: C.amber, marginBottom: 6 }}>Interest: {c.eventInterest}</div>}
+                      {c.nextStep && <div style={{ fontFamily: ft, fontSize: 13, color: C.tx, marginTop: 6 }}><span style={{ color: C.txd, fontFamily: mn, fontSize: 10, letterSpacing: "1px" }}>NEXT:</span> {c.nextStep}</div>}
+                      {c.notes && <div style={{ fontFamily: ft, fontSize: 12, color: C.txm, marginTop: 8, lineHeight: 1.5, fontStyle: "italic" }}>{c.notes}</div>}
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+                      <div style={{ fontFamily: mn, fontSize: 11, color, fontWeight: 700 }}>{days === 0 ? "Today" : days === 1 ? "1 day ago" : `${days} days ago`}</div>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button onClick={() => bumpLastContact(c.id)} style={{ fontFamily: mn, fontSize: 10, color: "#4ADE80", background: "#4ADE8010", border: "1px solid #4ADE8030", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontWeight: 700 }}>Touched</button>
+                        <button onClick={() => { setEditing(c); setDraft(c); setShowForm(true); }} style={{ fontFamily: mn, fontSize: 10, color: C.txm, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.glassBorder}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>Edit</button>
+                        <button onClick={() => remove(c.id)} style={{ fontFamily: mn, fontSize: 10, color: C.coral, background: C.coral + "10", border: `1px solid ${C.coral}30`, borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>{"\u00D7"}</button>
+                      </div>
+                    </div>
+                  </div>
+                </GlassCard>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL OPS: EVENT COUNTDOWN PLANNER
+   ═══════════════════════════════════════════════════════════ */
+function EventCountdown() {
+  const [selected, setSelected] = useState(EVENTS[0].name);
+  const ev = EVENTS.find(e => e.name === selected) || EVENTS[0];
+
+  const eventStart = useMemo(() => {
+    return new Date(2026, ev.monthIndex, ev.dayStart);
+  }, [ev]);
+
+  const now = new Date();
+  const daysOut = Math.ceil((eventStart.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+  const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const fmtShort = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+  const dateMinus = (weeks: number) => {
+    const d = new Date(eventStart);
+    d.setDate(d.getDate() - weeks * 7);
+    return d;
+  };
+
+  const milestones = ev.activationSteps.map((step, i) => {
+    const weeksOut = parseInt(step.timing.match(/(\d+)\s*weeks?/)?.[1] || "0", 10);
+    const isDayOf = step.timing.toLowerCase().includes("day");
+    const isPostEvent = step.timing.toLowerCase().includes("after");
+    const postWeeks = isPostEvent ? parseInt(step.timing.match(/(\d+)\s*weeks?/)?.[1] || "1", 10) : 0;
+
+    let milestoneDate: Date;
+    if (isPostEvent) {
+      milestoneDate = new Date(eventStart);
+      milestoneDate.setDate(milestoneDate.getDate() + postWeeks * 7);
+    } else if (isDayOf) {
+      milestoneDate = eventStart;
+    } else {
+      milestoneDate = dateMinus(weeksOut);
+    }
+    const past = milestoneDate.getTime() < now.getTime();
+    return { ...step, date: milestoneDate, past, daysFromNow: Math.ceil((milestoneDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) };
+  });
+
+  const col = ev.color;
+
+  return (
+    <section style={{ padding: "80px 32px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <SectionLabel>Event Planner</SectionLabel>
+            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          </div>
+          <SectionTitle>Countdown & Milestone Dates</SectionTitle>
+          <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 620, marginBottom: 28 }}>
+            Pick an event — see every milestone phase with real calendar dates backed out from the event date. Red = overdue, amber = due within 7 days.
+          </p>
+        </FadeIn>
+
+        <FadeIn delay={50}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 28 }}>
+            {EVENTS.map(e => (
+              <button key={e.name} onClick={() => setSelected(e.name)} style={{
+                fontFamily: ft, fontSize: 12, fontWeight: selected === e.name ? 700 : 500,
+                color: selected === e.name ? "#060608" : C.txm,
+                background: selected === e.name ? `linear-gradient(135deg, ${e.color}, ${e.color}cc)` : "rgba(255,255,255,0.03)",
+                border: `1px solid ${selected === e.name ? e.color : C.glassBorder}`,
+                borderRadius: 10, padding: "8px 14px", cursor: "pointer", transition: "all 0.2s ease",
+              }}>{e.name}</button>
+            ))}
+          </div>
+        </FadeIn>
+
+        <FadeIn delay={100}>
+          <GlassCard style={{ padding: "28px 32px", marginBottom: 20, background: `linear-gradient(135deg, ${col}10, ${col}04)`, border: `1px solid ${col}30` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
+              <div>
+                <div style={{ fontFamily: gf, fontSize: 28, fontWeight: 900, color: C.tx, marginBottom: 4 }}>{ev.name}</div>
+                <div style={{ fontFamily: mn, fontSize: 13, color: col, marginBottom: 2 }}>{ev.dates}</div>
+                <div style={{ fontFamily: ft, fontSize: 13, color: C.txm }}>{ev.location}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontFamily: mn, fontSize: 48, fontWeight: 900, color: col, lineHeight: 1, letterSpacing: "-2px" }}>{daysOut > 0 ? daysOut : 0}</div>
+                <div style={{ fontFamily: mn, fontSize: 11, color: C.txm, letterSpacing: "2px", textTransform: "uppercase", marginTop: 4 }}>{daysOut > 0 ? "days out" : daysOut === 0 ? "today" : "past"}</div>
+              </div>
+            </div>
+          </GlassCard>
+        </FadeIn>
+
+        <div style={{ position: "relative", paddingLeft: 40 }}>
+          <div style={{ position: "absolute", left: 10, top: 10, bottom: 10, width: 2, background: `linear-gradient(180deg, ${col}40, ${col}10)` }} />
+          {milestones.map((m, i) => {
+            let statusColor = col;
+            let statusLabel = "Upcoming";
+            if (m.past) { statusColor = "#4ADE80"; statusLabel = "Passed"; }
+            else if (m.daysFromNow <= 7) { statusColor = C.coral; statusLabel = "This week"; }
+            else if (m.daysFromNow <= 14) { statusColor = C.amber; statusLabel = "Next 2 weeks"; }
+
+            return (
+              <FadeIn key={i} delay={i * 60}>
+                <div style={{ position: "relative", marginBottom: 16 }}>
+                  <div style={{ position: "absolute", left: -31, top: 18, width: 14, height: 14, borderRadius: "50%", background: statusColor, border: `3px solid ${C.bg}`, boxShadow: `0 0 12px ${statusColor}60` }} />
+                  <GlassCard style={{ padding: "16px 22px", borderLeft: `3px solid ${statusColor}` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, gap: 12, flexWrap: "wrap" }}>
+                      <div>
+                        <div style={{ fontFamily: ft, fontSize: 16, fontWeight: 800, color: C.tx }}>{m.phase}</div>
+                        <div style={{ fontFamily: mn, fontSize: 11, color: C.txd, marginTop: 2 }}>{m.timing}</div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontFamily: mn, fontSize: 13, fontWeight: 700, color: statusColor }}>{fmt(m.date)}</div>
+                        <div style={{ fontFamily: mn, fontSize: 10, color: statusColor, marginTop: 2, letterSpacing: "1px" }}>{statusLabel}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {m.tasks.map((task, ti) => (
+                        <div key={ti} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                          <span style={{ fontFamily: mn, fontSize: 10, color: col, flexShrink: 0, paddingTop: 3 }}>{"\u2022"}</span>
+                          <span style={{ fontFamily: ft, fontSize: 13, color: C.txm, lineHeight: 1.5 }}>{task}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </GlassCard>
+                </div>
+              </FadeIn>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function InternalOpsTab() {
   return (
     <div style={{ background: C.bg, minHeight: "100vh", position: "relative" }}>
       <GradientMesh />
       <div style={{ position: "relative", zIndex: 1, paddingTop: 80 }}>
+        <MeetingPrep />
+        <ContactCRM />
+        <EventCountdown />
         <MarketingDeployment />
         <ColdEmailGenerator />
         <BudgetTracker />
