@@ -1,5 +1,6 @@
 import ActivationsClient from "./activations-client";
+import { semianalysisAwsConfig } from "@/config/semianalysis-aws";
 
 export default function Home() {
-  return <ActivationsClient />;
+  return <ActivationsClient config={semianalysisAwsConfig} />;
 }

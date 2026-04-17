@@ -1,6 +1,8 @@
 // @ts-nocheck
 "use client";
 import { useState, useEffect, useRef, useMemo } from "react";
+import { SiteConfigContext, useSiteConfig } from "@/config/site-config";
+import type { SiteConfig, ActivationStatus } from "@/config/site-config";
 
 /* ═══════════════════════════════════════════════════════════
    DESIGN TOKENS
@@ -8,7 +10,6 @@ import { useState, useEffect, useRef, useMemo } from "react";
 const C = {
   amber: "#F7B041", blue: "#0B86D1", teal: "#2EAD8E", coral: "#E06347",
   violet: "#905CCB", cyan: "#26C9D8",
-  aws: "#FF9900",
   bg: "#050508", card: "rgba(255,255,255,0.03)", surface: "#0a0a12",
   border: "rgba(255,255,255,0.06)", borderHover: "rgba(255,255,255,0.12)",
   tx: "#E8E4DD", txm: "#8A8690", txd: "#4E4B56",
@@ -17,227 +18,17 @@ const C = {
 const gf = "'Grift','Outfit',sans-serif";
 const ft = "'Outfit',sans-serif";
 const mn = "'JetBrains Mono',monospace";
-const tagColors = { NETWORKING: C.amber, BANQUET: C.blue, RESEARCH: C.violet, CONFERENCE: C.teal, PREMIUM: C.coral };
 
-/* Activation status per event */
-type ActivationStatus = "proposed" | "interested" | "activated";
-const STATUS_CONFIG: Record<ActivationStatus, { label: string; color: string; bg: string; icon: string }> = {
-  proposed:   { label: "Proposed",       color: C.txm,  bg: "rgba(255,255,255,0.04)", icon: "\u25CB" },
-  interested: { label: "AWS Interested", color: C.aws,  bg: C.aws + "12",             icon: "\u25C9" },
-  activated:  { label: "AWS Activated",  color: "#4ADE80", bg: "#4ADE8015",            icon: "\u2713" },
-};
+/* Partner-aware status labels */
+function useStatusConfig() {
+  const { partner } = useSiteConfig();
+  return {
+    proposed:   { label: "Proposed",                   color: C.txm,     bg: "rgba(255,255,255,0.04)", icon: "\u25CB" },
+    interested: { label: `${partner.name} Interested`, color: partner.color, bg: partner.color + "12", icon: "\u25C9" },
+    activated:  { label: `${partner.name} Activated`,  color: "#4ADE80", bg: "#4ADE8015",              icon: "\u2713" },
+  } as Record<ActivationStatus, { label: string; color: string; bg: string; icon: string }>;
+}
 
-/* ═══════════════════════════════════════════════════════════
-   EVENT DATA — comprehensive
-   ═══════════════════════════════════════════════════════════ */
-const EVENTS = [
-  {
-    name: "MLSys",
-    dates: "May 18–22, 2026",
-    location: "Bellevue, WA",
-    tag: "NETWORKING",
-    color: C.amber,
-    status: "proposed" as ActivationStatus,
-    activation: "Happy Hour + Sponsorship",
-    logo: "/images/events/mlsys.svg",
-    monthIndex: 4, dayStart: 18, dayEnd: 22,
-    about: "MLSys is the premier venue for research at the intersection of machine learning and systems. It brings together researchers and practitioners from ML, systems, hardware, and related fields to discuss cutting-edge work on the design, implementation, and deployment of ML systems.",
-    audience: "ML systems researchers, infrastructure engineers, hardware architects, and industry practitioners from companies building and deploying ML at scale.",
-    ourPlan: "Host an exclusive happy hour for ~200 attendees targeting ML systems researchers and infrastructure engineers. Sponsorship presence at the main conference with AWS branding throughout. Focus on intimate networking — the kind of environment where real conversations happen between the people actually building AI infrastructure.",
-    whyItMatters: "MLSys attendees are the engineers who decide what infrastructure to build on. This is a high-signal, low-noise event where every conversation counts. AWS presence here reinforces the message that AWS is where serious ML infrastructure lives.",
-    activationSteps: [
-      { phase: "Partnership Alignment", timing: "6 weeks out", tasks: ["Confirm sponsorship tier and budget allocation", "Align on branding guidelines and co-marketing assets", "Define target attendee profile and invite list criteria", "Set KPIs: target 200 attendees, 60%+ senior engineers"] },
-      { phase: "Venue & Logistics", timing: "4 weeks out", tasks: ["Secure venue near convention center (rooftop bar or upscale lounge)", "Book catering — craft cocktails + elevated appetizers", "Arrange AV setup for brief welcome remarks", "Design and order co-branded signage, name badges, lanyards"] },
-      { phase: "Audience Building", timing: "3 weeks out", tasks: ["Launch invite campaign via SemiAnalysis newsletter (200K+ subscribers)", "Targeted outreach to MLSys registered attendees", "Social media promotion across SemiAnalysis channels", "Personal invites to top 50 target attendees from SA network"] },
-      { phase: "Event Execution", timing: "Day of", tasks: ["Venue setup 3 hours prior — signage, check-in, AV test", "Check-in with QR codes for attendee tracking", "Welcome remarks from SemiAnalysis + AWS representatives (5 min)", "Facilitated networking — no formal programming, organic conversations"] },
-      { phase: "Post-Event", timing: "1 week after", tasks: ["Attendee survey — engagement, satisfaction, follow-up interest", "Compile attendee list with company/role for AWS sales follow-up", "Photo/video highlights package for social + internal reporting", "ROI report: attendance, seniority breakdown, follow-up pipeline"] },
-    ],
-  },
-  {
-    name: "Computex",
-    dates: "Jun 2–5, 2026",
-    location: "Taipei, Taiwan",
-    tag: "BANQUET",
-    color: C.blue,
-    status: "proposed" as ActivationStatus,
-    activation: "AI Wonderland Banquet",
-    logo: "/images/events/computex.svg",
-    monthIndex: 5, dayStart: 2, dayEnd: 5,
-    about: "Computex is the world's largest computing and technology trade show, held annually in Taipei. It's the beating heart of the global semiconductor and hardware supply chain — where TSMC, NVIDIA, AMD, Intel, and the entire ecosystem converge.",
-    audience: "Semiconductor executives, hardware engineers, supply chain leaders, OEMs, ODMs, and the global technology press. Heavy representation from APAC-based hardware companies.",
-    ourPlan: "Host the 'AI Wonderland' themed banquet — an exclusive sit-down dinner experience for 300+ VIP attendees. The venue is already booked. This will be a premium, invitation-only event with themed décor, curated seating arrangements to maximize high-value introductions, and a keynote moment spotlighting AWS's AI infrastructure investments in the APAC region.",
-    whyItMatters: "Computex is where hardware meets cloud. AWS's presence at an exclusive SemiAnalysis banquet positions AWS as the cloud provider that understands the full stack — from silicon to cloud. The APAC audience here includes procurement leaders who make billion-dollar infrastructure decisions.",
-    activationSteps: [
-      { phase: "Partnership Alignment", timing: "8 weeks out", tasks: ["Finalize banquet theme and AWS integration points", "Confirm keynote speaker or fireside chat format", "Align on VIP invite list — target C-suite and VP-level hardware executives", "Budget finalization: venue, catering, production, travel"] },
-      { phase: "Creative & Production", timing: "6 weeks out", tasks: ["Design 'AI Wonderland' themed décor and branded materials", "Plan seating chart for maximum networking value", "Produce co-branded invitations (digital + physical for top VIPs)", "Coordinate with Taipei venue on AV, staging, and flow"] },
-      { phase: "Audience Building", timing: "4 weeks out", tasks: ["VIP invitation campaign — personal outreach to 500+ targets", "SemiAnalysis newsletter feature on Computex activation", "Coordinate with Computex organizers for cross-promotion", "Confirm RSVP list and manage waitlist"] },
-      { phase: "Event Execution", timing: "Day of", tasks: ["Full venue production setup — themed décor, lighting, staging", "Red carpet / welcome experience with photographer", "Seated dinner with curated conversation starters at each table", "Keynote moment: 15-min spotlight on AWS + SemiAnalysis vision", "Post-dinner networking lounge with cocktails"] },
-      { phase: "Post-Event", timing: "1 week after", tasks: ["Professional photo/video package for both teams", "Attendee follow-up emails with AWS resources", "Press coverage compilation and social media highlights", "Full ROI report with attendee seniority analysis"] },
-    ],
-  },
-  {
-    name: "ICML",
-    dates: "Jul 6–11, 2026",
-    location: "Seoul, South Korea",
-    tag: "RESEARCH",
-    color: C.violet,
-    status: "proposed" as ActivationStatus,
-    activation: "Special Research Event",
-    logo: "/images/events/icml.svg",
-    monthIndex: 6, dayStart: 6, dayEnd: 11,
-    about: "The International Conference on Machine Learning (ICML) is one of the top three ML research conferences globally. It attracts the brightest minds in machine learning — from foundational research to applied ML. The 2026 edition in Seoul will draw significant APAC attendance.",
-    audience: "ML researchers (academic and industry), PhD students, research lab directors, and applied ML engineers from Google DeepMind, Meta FAIR, Microsoft Research, OpenAI, and leading universities worldwide.",
-    ourPlan: "A special research-focused event that elevates our ML research positioning. This is about going beyond a happy hour — we want to create a meaningful research experience. Think curated research talks, poster sessions featuring AWS-powered research, and intimate roundtable discussions on the future of ML infrastructure. We want to up our presence in the research machine learning community significantly.",
-    whyItMatters: "ICML is where the next generation of AI is being invented. Researchers here will become the CTOs and VP Engs of tomorrow's AI companies. AWS investment in this community pays dividends for years. SemiAnalysis's credibility in this space gives AWS authentic entry.",
-    activationSteps: [
-      { phase: "Partnership Alignment", timing: "10 weeks out", tasks: ["Define research event format — workshop, symposium, or curated talks", "Identify AWS research scientists for panel/talk participation", "Align on research themes: infrastructure for ML, scaling laws, efficiency", "Set target: 300 attendees, 50%+ active ML researchers"] },
-      { phase: "Program Design", timing: "8 weeks out", tasks: ["Curate speaker lineup — mix of AWS, academia, and industry", "Design poster session format for AWS-powered research", "Plan roundtable discussions on ML infrastructure future", "Create event microsite with program details and speaker bios"] },
-      { phase: "Audience Building", timing: "5 weeks out", tasks: ["Targeted outreach to ICML registered attendees", "Partner with university ML labs for student researcher attendance", "SemiAnalysis newsletter deep-dive on ICML research themes", "Social campaign featuring speaker previews and research topics"] },
-      { phase: "Event Execution", timing: "Day of", tasks: ["Venue setup — research poster displays, AV for talks, networking areas", "Curated research talks (3-4 speakers, 20 min each)", "Poster session and demo hour", "Roundtable discussions (4 tables, 15 people each, 45 min)", "Closing reception with open networking"] },
-      { phase: "Post-Event", timing: "1 week after", tasks: ["Publish research event recap on SemiAnalysis", "Share speaker presentations and discussion summaries", "Connect attendees with relevant AWS research programs", "Impact report: research community engagement metrics"] },
-    ],
-  },
-  {
-    name: "Raise Paris",
-    dates: "Jul 8–9, 2026",
-    location: "Paris, France",
-    tag: "NETWORKING",
-    color: C.teal,
-    status: "proposed" as ActivationStatus,
-    activation: "Happy Hours + Neo Cloud World",
-    logo: "/images/events/raise.svg",
-    monthIndex: 6, dayStart: 8, dayEnd: 9,
-    about: "Raise is Europe's premier conference for the neo-cloud and AI infrastructure ecosystem. It brings together European cloud builders, sovereign cloud operators, AI startups, and infrastructure investors. Paris in July is the nexus of European tech.",
-    audience: "European cloud operators, sovereign cloud builders, AI startup founders, infrastructure investors, and policy-makers focused on digital sovereignty and AI compute in Europe.",
-    ourPlan: "Multiple happy hour activations throughout the event, working directly with the Raise organizing team. This is about embedding AWS in the European neo-cloud conversation. Happy hours at strategic venues around the conference, creating multiple touchpoints with the European AI infrastructure community. We're coordinating with the core Raise team on programming.",
-    whyItMatters: "Europe's sovereign cloud and AI infrastructure market is booming. Raise is where European compute decisions get made. AWS needs authentic presence here — not corporate booths, but genuine community engagement. SemiAnalysis's partnership with Raise organizers gives us inside access.",
-    activationSteps: [
-      { phase: "Partnership Alignment", timing: "8 weeks out", tasks: ["Coordinate with Raise organizing committee on event integration", "Define happy hour schedule — 2-3 events across 2 days", "Align on European market messaging for AWS", "Budget for multiple venue bookings in central Paris"] },
-      { phase: "Venue & Logistics", timing: "5 weeks out", tasks: ["Secure 2-3 venues near Raise conference (historic Parisian locations)", "Coordinate catering — French-inspired menus with local partners", "Design co-branded materials with European market focus", "Arrange photographer/videographer for all events"] },
-      { phase: "Audience Building", timing: "3 weeks out", tasks: ["Cross-promote with Raise official communications", "SemiAnalysis newsletter feature on European AI infrastructure", "Targeted outreach to European cloud and AI companies", "VIP invites to sovereign cloud operators and EU policy leaders"] },
-      { phase: "Event Execution", timing: "Days of", tasks: ["Setup at each venue — branding, check-in, welcome signage", "Day 1 evening: Opening night happy hour (broader audience)", "Day 2 afternoon: Intimate VIP networking (invite-only, 50 people)", "Day 2 evening: Closing celebration happy hour"] },
-      { phase: "Post-Event", timing: "1 week after", tasks: ["European market follow-up campaign for AWS", "Attendee insights report: European cloud buying signals", "Content package: photos, testimonials, social highlights", "Warm introductions pipeline for AWS European sales team"] },
-    ],
-  },
-  {
-    name: "Yotta",
-    dates: "Sep 28–30, 2026",
-    location: "Las Vegas, NV",
-    tag: "CONFERENCE",
-    color: C.amber,
-    status: "proposed" as ActivationStatus,
-    activation: "Conference Presence",
-    logo: "/images/events/yotta.png",
-    monthIndex: 8, dayStart: 28, dayEnd: 30,
-    about: "Yotta is the data center and infrastructure mega-conference in Las Vegas. It brings together the people who build, buy, and operate the physical infrastructure behind cloud and AI — from power and cooling to networking and compute.",
-    audience: "Data center operators, infrastructure buyers, facilities engineers, colocation providers, hyperscaler procurement teams, and power/energy companies entering the AI infrastructure space.",
-    ourPlan: "Strategic conference presence targeting the data center and infrastructure community. Branded presence throughout the event, speaking opportunities, and targeted meetings with infrastructure buyers. This is where the physical layer of AI compute gets decided — AWS needs to be in these conversations.",
-    whyItMatters: "As AI compute demand explodes, data center infrastructure is the bottleneck. Yotta attendees are the people solving this problem. AWS's presence here signals commitment to the physical infrastructure that makes cloud AI possible.",
-    activationSteps: [
-      { phase: "Partnership Alignment", timing: "8 weeks out", tasks: ["Secure speaking slot or panel participation for AWS leader", "Define conference presence: booth, signage, meeting rooms", "Identify target accounts for scheduled meetings", "Align messaging: AWS infrastructure investment story"] },
-      { phase: "Logistics & Creative", timing: "5 weeks out", tasks: ["Design booth and branded materials", "Schedule 1:1 meetings with target infrastructure buyers", "Coordinate SemiAnalysis content for conference distribution", "Book meeting rooms or hospitality suite for private conversations"] },
-      { phase: "Audience Building", timing: "3 weeks out", tasks: ["Pre-conference outreach to registered attendees", "SemiAnalysis newsletter feature on data center infrastructure", "Schedule specific meetings with top 20 target accounts", "Social media campaign building momentum for conference presence"] },
-      { phase: "Event Execution", timing: "Days of", tasks: ["Booth staffed with AWS infrastructure experts", "Hosted meetings and demos in private meeting rooms", "Speaking session or panel participation", "Evening networking reception for top contacts"] },
-      { phase: "Post-Event", timing: "1 week after", tasks: ["Meeting notes and follow-up action items for all 1:1s", "Lead pipeline report for AWS sales team", "Conference insights brief: infrastructure market trends", "Content recap for SemiAnalysis audience"] },
-    ],
-  },
-  {
-    name: "OCP Global Summit",
-    dates: "Oct 12–15, 2026",
-    location: "San Jose, CA",
-    tag: "CONFERENCE",
-    color: C.blue,
-    status: "proposed" as ActivationStatus,
-    activation: "Conference Presence",
-    logo: "/images/events/ocp.jpg",
-    monthIndex: 9, dayStart: 12, dayEnd: 15,
-    about: "The Open Compute Project Global Summit is the hardware community's flagship event. Founded by Facebook/Meta, OCP drives open-source hardware innovation for data centers. It's where the next generation of server, storage, and networking hardware gets designed and decided.",
-    audience: "Datacenter architects, hardware engineers, server and networking designers, procurement leaders from hyperscalers, and the open-source hardware community. Heavy representation from Meta, Microsoft, Google, and major ODMs.",
-    ourPlan: "Strong conference presence at OCP with focus on AWS's open hardware contributions and infrastructure innovation. Speaking engagements, demo stations showcasing AWS custom silicon (Graviton, Trainium, Inferentia), and targeted meetings with hardware architects and procurement teams.",
-    whyItMatters: "OCP is where open hardware standards get set. AWS's custom silicon story (Graviton, Trainium, Inferentia) is one of the most compelling in the industry. This is the audience that appreciates and amplifies that message.",
-    activationSteps: [
-      { phase: "Partnership Alignment", timing: "8 weeks out", tasks: ["Secure speaking slot on AWS custom silicon or open hardware contributions", "Plan demo stations for Graviton/Trainium/Inferentia", "Identify hardware architect targets for meetings", "Coordinate with OCP organizers on session placement"] },
-      { phase: "Logistics & Creative", timing: "5 weeks out", tasks: ["Design demo station with live AWS silicon benchmarks", "Prepare technical deep-dive materials for hardware audience", "Schedule meetings with datacenter architects and procurement", "Co-branded SemiAnalysis technical brief on AWS hardware"] },
-      { phase: "Audience Building", timing: "3 weeks out", tasks: ["Technical preview content on SemiAnalysis channels", "Targeted outreach to OCP community members", "Pre-schedule demos with priority attendees", "Social campaign featuring AWS hardware innovations"] },
-      { phase: "Event Execution", timing: "Days of", tasks: ["Technical talk/panel on AWS open hardware contributions", "Demo stations running throughout conference", "Scheduled 1:1 meetings with hardware decision-makers", "Hosted dinner for top 30 hardware architects (evening of Day 2)"] },
-      { phase: "Post-Event", timing: "1 week after", tasks: ["Technical content published on SemiAnalysis (deep dive)", "Demo engagement metrics and meeting pipeline report", "Follow-up with all demo visitors and meeting attendees", "Hardware community sentiment analysis"] },
-    ],
-  },
-  {
-    name: "COLM",
-    dates: "Oct 6–9, 2026",
-    location: "San Francisco, CA",
-    tag: "PREMIUM",
-    color: C.coral,
-    status: "proposed" as ActivationStatus,
-    activation: "Boat Cruise",
-    logo: "/images/events/colm.svg",
-    monthIndex: 9, dayStart: 6, dayEnd: 9,
-    about: "COLM (Conference on Language Modeling) is a newer, focused conference dedicated entirely to language models — the technology behind ChatGPT, Claude, Gemini, and the entire LLM revolution. San Francisco is the epicenter of this work.",
-    audience: "LLM researchers, foundation model engineers, AI startup founders, and the people building the most important technology of the decade. Extremely high concentration of decision-makers from frontier AI labs.",
-    ourPlan: "Premium boat cruise on the San Francisco Bay — our proven flagship format. An evening experience on the water with 200-300 of the most important people in language modeling. This format creates an unforgettable, captive-audience experience where AWS is the name on everyone's mind. Beautiful views, premium catering, and the kind of environment where partnerships get made.",
-    whyItMatters: "COLM attendees are building the models that drive AI compute demand. Every major foundation model runs on cloud infrastructure. Being the brand associated with the best event at COLM positions AWS as the infrastructure partner of choice for the LLM community.",
-    activationSteps: [
-      { phase: "Partnership Alignment", timing: "10 weeks out", tasks: ["Confirm boat cruise format and AWS co-branding approach", "Select vessel — capacity 250-300, premium finish", "Define experience flow: boarding, cruise, program, docking", "Set guest list criteria: LLM researchers, AI founders, infrastructure leads"] },
-      { phase: "Creative & Production", timing: "7 weeks out", tasks: ["Design branded boarding experience and on-deck signage", "Plan catering menu — premium seated dinner + open bar", "Curate entertainment: live DJ or jazz ensemble on deck", "Design commemorative item (branded gift for attendees)", "Coordinate sunset timing for optimal experience"] },
-      { phase: "Audience Building", timing: "4 weeks out", tasks: ["Exclusive invite campaign — 'You've been selected' messaging", "SemiAnalysis newsletter feature building anticipation", "Personal outreach to top 50 AI researchers and founders", "Waitlist management to maintain exclusivity"] },
-      { phase: "Event Execution", timing: "Day of", tasks: ["Dockside setup: red carpet, branded check-in, welcome drinks", "Boarding experience with photographer", "Welcome toast from SemiAnalysis + AWS on deck", "Cruise route: under Golden Gate Bridge, around Alcatraz, Bay views", "Premium dinner service during cruise", "Open networking on multiple decks post-dinner"] },
-      { phase: "Post-Event", timing: "1 week after", tasks: ["Professional photo/video package (drone footage of cruise)", "Attendee follow-up with AWS partnership materials", "Social media content release (phased over 2 weeks)", "Full ROI report: attendee quality, conversations initiated, pipeline"] },
-    ],
-  },
-  {
-    name: "NeurIPS",
-    dates: "Dec 6–12, 2026",
-    location: "Sydney, Australia",
-    tag: "PREMIUM",
-    color: C.coral,
-    status: "proposed" as ActivationStatus,
-    activation: "Boat Cruise",
-    logo: "/images/events/neurips.svg",
-    monthIndex: 11, dayStart: 6, dayEnd: 12,
-    about: "NeurIPS (Conference on Neural Information Processing Systems) is the world's largest and most prestigious AI research conference. With 15,000+ attendees, it's where the global AI community converges. The 2026 edition in Sydney marks the first time NeurIPS comes to Australia — a massive moment for APAC AI.",
-    audience: "The entire AI ecosystem — researchers, engineers, executives, investors, policymakers, and press. NeurIPS draws from every major tech company, university, AI lab, and startup on the planet.",
-    ourPlan: "The crown jewel of our activation calendar — a premium boat cruise on Sydney Harbour. Building on our proven NeurIPS format (partnered with SAIL/ReadSail in 2025, 750 attendees, 680 decision-makers), this will be the must-attend event of the conference. Flagship experience with AWS as presenting partner. Capacity for 300+ on a premium vessel with views of the Sydney Opera House and Harbour Bridge.",
-    whyItMatters: "NeurIPS is THE event. Our 2025 boat cruise with SAIL proved the format — 750 attendees, 680 decision-makers, 38% academia, 18% Big Tech, 12% AI startups. Sydney takes this global. AWS as presenting partner of the NeurIPS boat cruise is a statement that echoes through the entire AI community.",
-    activationSteps: [
-      { phase: "Partnership Alignment", timing: "12 weeks out", tasks: ["Define AWS as 'Presenting Partner' — top-tier branding", "Secure premium vessel in Sydney Harbour (300+ capacity)", "Align on guest curation strategy based on 2025 learnings", "Set ambitious targets: 400 attendees, expand beyond 2025 results"] },
-      { phase: "Creative & Production", timing: "8 weeks out", tasks: ["Design flagship branded experience — from invite to follow-up", "Premium catering with Australian coastal theme", "Plan multi-deck experience: dinner deck, networking deck, views deck", "Commission professional event film crew (mini-documentary)", "Design limited-edition attendee gift"] },
-      { phase: "Audience Building", timing: "6 weeks out", tasks: ["Launch exclusive invitation campaign (NeurIPS registration required)", "Leverage 2025 attendee list for return invites", "SemiAnalysis newsletter series building to NeurIPS", "Coordinated social campaign with countdown content", "Press outreach for pre-event coverage"] },
-      { phase: "Event Execution", timing: "Day of", tasks: ["Harbour-side setup: branded tent, red carpet, welcome drinks", "Premium boarding experience with professional photographer", "Keynote moment on main deck — AWS + SemiAnalysis vision for AI", "Multi-course dinner during cruise through Sydney Harbour", "Views of Sydney skyline and Harbour Bridge at dusk", "After-dinner networking party with live music", "Docking and farewell with gift bags"] },
-      { phase: "Post-Event", timing: "2 weeks after", tasks: ["Mini-documentary edit and release", "Professional photo gallery for both teams", "Comprehensive attendee analytics and sentiment report", "Pipeline report: connections made, follow-ups initiated", "Year-in-review recap: all 8 activations, cumulative impact", "2026 partnership renewal proposal"] },
-    ],
-  },
-];
-
-const STATS = [
-  { value: "3,100+", label: "Event Attendees in 2025", sub: "Across 8 major activations" },
-  { value: "680", label: "Decision-Makers at NeurIPS", sub: "Our 2025 boat cruise with SAIL" },
-  { value: "14", label: "Countries Represented", sub: "Global reach, local impact" },
-  { value: "200K+", label: "Newsletter Subscribers", sub: "AI & semiconductor professionals" },
-];
-
-const PAST_EVENTS = [
-  { name: "NeurIPS 2025 Boat Cruise", partner: "w/ SAIL (ReadSail)", attendees: "750", highlight: "680 decision-makers from Google, Meta, NVIDIA, Anthropic, and 40+ AI startups. 38% academia, 18% Big Tech, 12% AI startups." },
-  { name: "Computex 2025 Banquet", partner: "AI Wonderland", attendees: "320+", highlight: "TSMC, AMD, Intel, MediaTek leadership in attendance. The must-attend event of the week in Taipei." },
-  { name: "ICML 2025 Research Event", partner: "Research Community", attendees: "450+", highlight: "Top-cited ML researchers, keynote speakers attended. Standing room only." },
-  { name: "Yotta 2025", partner: "Data Center Community", attendees: "3,000+", highlight: "3,000+ digital infrastructure leaders at MGM Grand. 200+ speakers, 150+ sponsors." },
-];
-
-const AUDIENCE_BREAKDOWN = [
-  { label: "Academia & Research", pct: 38, color: C.violet },
-  { label: "Big Tech (Google, Meta, etc.)", pct: 18, color: C.blue },
-  { label: "AI Startups", pct: 12, color: C.amber },
-  { label: "Frontier Labs", pct: 10, color: C.teal },
-  { label: "Research Analysts", pct: 8, color: C.cyan },
-  { label: "Investors", pct: 5, color: C.coral },
-];
-
-const WHY_US = [
-  { title: "200K+ Newsletter Subscribers", body: "The most-read independent publication covering semiconductors, AI infrastructure, and compute. 200,000+ AI and semiconductor industry professionals, researchers, investors, and enthusiasts.", icon: "\u2709" },
-  { title: "1M+ YouTube Views / Month", body: "Deep-dive technical content that decision-makers actively seek. Not impressions — engagement from the people who spec, architect, and sign.", icon: "\u25B6" },
-  { title: "Trusted Industry Voice", body: "Cited by Bloomberg, Financial Times, and The Information. When SemiAnalysis speaks, the semiconductor and AI community listens and acts.", icon: "\u2606" },
-  { title: "750 at NeurIPS 2025", body: "Our boat cruise with SAIL drew 750 attendees and 680 decision-makers — 38% academia, 18% Big Tech, 12% AI startups. The format is proven.", icon: "\u2605" },
-];
 
 /* ═══════════════════════════════════════════════════════════
    UTILITY COMPONENTS
@@ -499,21 +290,23 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 /* ═══════════════════════════════════════════════════════════
    EXPANDABLE EVENT CARD
    ═══════════════════════════════════════════════════════════ */
-function EventCard({ ev, index }: { ev: typeof EVENTS[0]; index: number }) {
+function EventCard({ ev, index }: { ev: SiteConfig["events"][0]; index: number }) {
+  const { tagColors, partner } = useSiteConfig();
+  const STATUS_CONFIG = useStatusConfig();
   const [open, setOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const col = tagColors[ev.tag] || C.amber;
   const st = STATUS_CONFIG[ev.status];
   const isActivated = ev.status === "activated";
   const isInterested = ev.status === "interested";
-  const borderAccent = isActivated ? "#4ADE80" : isInterested ? C.aws : col;
+  const borderAccent = isActivated ? "#4ADE80" : isInterested ? partner.color : col;
 
   return (
     <FadeIn delay={index * 60}>
       <div style={{
-        background: isActivated ? "rgba(74,222,128,0.03)" : isInterested ? `${C.aws}05` : C.glass,
+        background: isActivated ? "rgba(74,222,128,0.03)" : isInterested ? `${partner.color}05` : C.glass,
         backdropFilter: "blur(20px)",
-        border: `1px solid ${open ? borderAccent + "40" : isActivated ? "#4ADE8025" : isInterested ? C.aws + "20" : C.glassBorder}`,
+        border: `1px solid ${open ? borderAccent + "40" : isActivated ? "#4ADE8025" : isInterested ? partner.color + "20" : C.glassBorder}`,
         borderRadius: 20,
         overflow: "hidden",
         transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -522,7 +315,7 @@ function EventCard({ ev, index }: { ev: typeof EVENTS[0]; index: number }) {
       }}>
         {/* Activated top bar */}
         {(isActivated || isInterested) && (
-          <div style={{ height: 3, background: isActivated ? "linear-gradient(90deg, #4ADE80, #22C55E)" : `linear-gradient(90deg, ${C.aws}, ${C.aws}88)` }} />
+          <div style={{ height: 3, background: isActivated ? "linear-gradient(90deg, #4ADE80, #22C55E)" : `linear-gradient(90deg, ${partner.color}, ${partner.color}88)` }} />
         )}
 
         {/* Card header — always visible */}
@@ -551,7 +344,7 @@ function EventCard({ ev, index }: { ev: typeof EVENTS[0]; index: number }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
                 {/* Event logo */}
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: isActivated ? "rgba(74,222,128,0.08)" : isInterested ? C.aws + "10" : "rgba(255,255,255,0.06)", border: `1px solid ${isActivated ? "#4ADE8020" : isInterested ? C.aws + "20" : C.glassBorder}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: isActivated ? "rgba(74,222,128,0.08)" : isInterested ? partner.color + "10" : "rgba(255,255,255,0.06)", border: `1px solid ${isActivated ? "#4ADE8020" : isInterested ? partner.color + "20" : C.glassBorder}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
                   <img src={ev.logo} alt={ev.name} style={{ width: 36, height: 36, objectFit: "contain", filter: ev.logo.endsWith(".svg") ? "brightness(0) invert(1)" : "none" }} />
                 </div>
                 <div>
@@ -604,7 +397,7 @@ function EventCard({ ev, index }: { ev: typeof EVENTS[0]; index: number }) {
 
             {/* Why It Matters */}
             <div style={{ marginBottom: 28 }}>
-              <div style={{ fontFamily: mn, fontSize: 10, color: col, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8, fontWeight: 700 }}>Why It Matters for AWS</div>
+              <div style={{ fontFamily: mn, fontSize: 10, color: col, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8, fontWeight: 700 }}>Why It Matters for {partner.name}</div>
               <div style={{ fontFamily: ft, fontSize: 14, color: C.txm, lineHeight: 1.7 }}>{ev.whyItMatters}</div>
             </div>
 
@@ -661,6 +454,7 @@ function EventCard({ ev, index }: { ev: typeof EVENTS[0]; index: number }) {
    CALENDAR VIEW
    ═══════════════════════════════════════════════════════════ */
 function CalendarView() {
+  const { events: EVENTS } = useSiteConfig();
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
   const startDays = [4, 0, 0, 3, 5, 1, 3, 6, 2, 4, 0, 2]; // 2026 first-day-of-month (0=Sun)
@@ -672,8 +466,8 @@ function CalendarView() {
     });
   }
 
-  // Only show months that have events
-  const activeMonths = [4, 5, 6, 8, 9, 11];
+  // Only show months that have events (any month with at least one event)
+  const activeMonths = Array.from(new Set(EVENTS.map(e => e.monthIndex))).sort((a, b) => a - b);
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 20 }}>
@@ -743,6 +537,8 @@ function CalendarView() {
    TIMELINE VIEW
    ═══════════════════════════════════════════════════════════ */
 function TimelineView() {
+  const { events: EVENTS, partner } = useSiteConfig();
+  const STATUS_CONFIG = useStatusConfig();
   const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   const grouped = useMemo(() => {
     const map: Record<number, typeof EVENTS> = {};
@@ -751,7 +547,7 @@ function TimelineView() {
       map[ev.monthIndex].push(ev);
     });
     return Object.entries(map).sort((a, b) => Number(a[0]) - Number(b[0]));
-  }, []);
+  }, [EVENTS]);
 
   return (
     <div style={{ position: "relative", paddingLeft: 60 }}>
@@ -778,7 +574,7 @@ function TimelineView() {
                 <div style={{ position: "absolute", left: -31, top: 14, width: 20, height: 1, background: ev.color + "40" }} />
                 <div style={{ position: "absolute", left: -40, top: 10, width: 8, height: 8, borderRadius: "50%", background: C.bg, border: `2px solid ${ev.color}60` }} />
 
-                <GlassCard style={{ padding: "22px 24px", borderLeft: `3px solid ${ev.status === "activated" ? "#4ADE80" : ev.status === "interested" ? C.aws : ev.color}`, background: ev.status === "activated" ? "rgba(74,222,128,0.03)" : ev.status === "interested" ? C.aws + "05" : C.glass }} hover>
+                <GlassCard style={{ padding: "22px 24px", borderLeft: `3px solid ${ev.status === "activated" ? "#4ADE80" : ev.status === "interested" ? partner.color : ev.color}`, background: ev.status === "activated" ? "rgba(74,222,128,0.03)" : ev.status === "interested" ? partner.color + "05" : C.glass }} hover>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                       <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.glassBorder}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
@@ -887,6 +683,7 @@ function CalendarTab() {
    GRADIENT MESH (shared background)
    ═══════════════════════════════════════════════════════════ */
 function GradientMesh() {
+  const { partner } = useSiteConfig();
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
       {/* Primary amber glow — top left — BIG */}
@@ -902,7 +699,7 @@ function GradientMesh() {
       {/* Amber secondary — center */}
       <div style={{ position: "absolute", top: "0%", left: "25%", width: "50vw", height: "50vw", background: `radial-gradient(circle, ${C.amber}14 0%, transparent 50%)`, borderRadius: "50%", filter: "blur(80px)" }} />
       {/* AWS orange — bottom right */}
-      <div style={{ position: "absolute", bottom: "0%", right: "5%", width: "35vw", height: "35vw", background: `radial-gradient(circle, ${C.aws}12 0%, transparent 55%)`, borderRadius: "50%", filter: "blur(60px)" }} />
+      <div style={{ position: "absolute", bottom: "0%", right: "5%", width: "35vw", height: "35vw", background: `radial-gradient(circle, ${partner.color}12 0%, transparent 55%)`, borderRadius: "50%", filter: "blur(60px)" }} />
       {/* Cyan accent — center left */}
       <div style={{ position: "absolute", top: "35%", left: "5%", width: "30vw", height: "30vw", background: `radial-gradient(circle, ${C.cyan}10 0%, transparent 55%)`, borderRadius: "50%", filter: "blur(70px)" }} />
       {/* Deep violet — top right corner */}
@@ -919,6 +716,9 @@ function GradientMesh() {
    OVERVIEW TAB — Main pitch page
    ═══════════════════════════════════════════════════════════ */
 function OverviewTab({ internal }: { internal: boolean }) {
+  const config = useSiteConfig();
+  const { events: EVENTS, stats: STATS, pastEvents: PAST_EVENTS, audienceBreakdown: AUDIENCE_BREAKDOWN, whyUs: WHY_US, host, partner, hero, whySection, tiers, footer } = config;
+  const STATUS_CONFIG = useStatusConfig();
   return (
     <div style={{ background: C.bg, minHeight: "100vh", position: "relative" }}>
       <GradientMesh />
@@ -938,22 +738,22 @@ function OverviewTab({ internal }: { internal: boolean }) {
           <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 750, height: 750, borderRadius: "50%", border: `1px solid ${C.violet}05`, pointerEvents: "none", animation: "flowRing 25s linear infinite" }} />
           <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 900 }}>
             <FadeIn>
-              <div style={{ fontFamily: mn, fontSize: 11, color: C.amber, letterSpacing: "4px", textTransform: "uppercase", marginBottom: 24 }}>2026 Event Partnership</div>
+              <div style={{ fontFamily: mn, fontSize: 11, color: C.amber, letterSpacing: "4px", textTransform: "uppercase", marginBottom: 24 }}>{hero.eyebrow}</div>
             </FadeIn>
             <FadeIn delay={100}>
-              <h1 style={{ fontFamily: gf, fontSize: "clamp(40px, 7vw, 76px)", fontWeight: 900, color: "#fff", lineHeight: 1.05, letterSpacing: "-2px", marginBottom: 24, background: `linear-gradient(135deg, #fff 0%, ${C.amber} 50%, ${C.blue} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                Powering the AI<br />Infrastructure Community
+              <h1 style={{ fontFamily: gf, fontSize: "clamp(40px, 7vw, 76px)", fontWeight: 900, color: "#fff", lineHeight: 1.05, letterSpacing: "-2px", marginBottom: 24, background: `linear-gradient(135deg, #fff 0%, ${C.amber} 50%, ${C.blue} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", whiteSpace: "pre-line" }}>
+                {hero.headline}
               </h1>
             </FadeIn>
             <FadeIn delay={200}>
               <p style={{ fontFamily: ft, fontSize: 19, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 600, margin: "0 auto 40px" }}>
-                A strategic marketing partnership between SemiAnalysis and AWS — reaching the decision-makers who architect, procure, and build AI infrastructure at the world's most important conferences.
+                {hero.subtitle}
               </p>
             </FadeIn>
             <FadeIn delay={300}>
               <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
                 <a href="#events" style={{ fontFamily: ft, fontSize: 15, fontWeight: 800, color: "#fff", background: `linear-gradient(135deg, ${C.amber}40, ${C.blue}40)`, backdropFilter: "blur(20px)", border: `1px solid rgba(255,255,255,0.1)`, padding: "14px 36px", borderRadius: 100, textDecoration: "none", transition: "all 0.2s ease" }}>Explore Events</a>
-                <a href="#why" style={{ fontFamily: ft, fontSize: 15, fontWeight: 700, color: C.amber, border: `1px solid ${C.amber}30`, padding: "14px 36px", borderRadius: 100, textDecoration: "none", transition: "all 0.2s ease" }}>Why SemiAnalysis</a>
+                <a href="#why" style={{ fontFamily: ft, fontSize: 15, fontWeight: 700, color: C.amber, border: `1px solid ${C.amber}30`, padding: "14px 36px", borderRadius: 100, textDecoration: "none", transition: "all 0.2s ease" }}>Why {host.name}</a>
               </div>
             </FadeIn>
             <FadeIn delay={500}>
@@ -1063,9 +863,9 @@ function OverviewTab({ internal }: { internal: boolean }) {
         <section id="why" style={{ padding: "80px 32px", maxWidth: 1100, margin: "0 auto" }}>
           <FadeIn>
             <SectionLabel>The Partnership</SectionLabel>
-            <SectionTitle>Why SemiAnalysis?</SectionTitle>
+            <SectionTitle>{whySection.title}</SectionTitle>
             <p style={{ fontFamily: ft, fontSize: 17, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 48 }}>
-              We don't just reach the AI infrastructure community — we are the AI infrastructure community. Our audience isn't passive subscribers. They're the engineers, researchers, and executives building the future of compute.
+              {whySection.lead}
             </p>
           </FadeIn>
 
@@ -1087,16 +887,12 @@ function OverviewTab({ internal }: { internal: boolean }) {
         <section id="benefits" style={{ padding: "80px 32px", background: "rgba(255,255,255,0.01)" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <FadeIn>
-              <SectionLabel>What AWS Gets</SectionLabel>
+              <SectionLabel>What {partner.name} Gets</SectionLabel>
               <SectionTitle>Partnership Benefits</SectionTitle>
             </FadeIn>
 
             <div data-grid-responsive style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 40 }}>
-              {[
-                { title: "Brand Positioning", items: ["Presenting partner branding at every activation", "Co-branded content across SemiAnalysis channels (200K+ subscribers)", "Association with the most trusted voice in AI infrastructure", "Premium placement — not a logo wall, a real partnership"] },
-                { title: "Audience Access", items: ["Direct access to 2,400+ decision-makers across 8 events", "Curated introductions to target accounts at every activation", "Pre- and post-event attendee data for sales pipeline building", "78% Director+ seniority — the people who sign and decide"] },
-                { title: "Content & Reach", items: ["SemiAnalysis newsletter features (200K+ subscribers)", "YouTube integration (1M+ monthly views)", "Event recap content and social media amplification", "Year-round brand presence beyond event days"] },
-              ].map((col, i) => (
+              {whySection.groups.map((col, i) => (
                 <FadeIn key={col.title} delay={i * 100}>
                   <GlassCard style={{ padding: "28px 24px", height: "100%" }}>
                     <div style={{ fontFamily: ft, fontSize: 18, fontWeight: 800, color: C.amber, marginBottom: 16 }}>{col.title}</div>
@@ -1125,11 +921,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
           </FadeIn>
 
           <div data-grid-responsive style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-            {[
-              { tier: "Select", desc: "Choose 2-3 events", features: ["Co-branded presence at selected events", "Newsletter features around event dates", "Attendee data and post-event reporting", "Dedicated AWS touchpoint at each activation"], highlight: false },
-              { tier: "Premier", desc: "Full season access", features: ["Presenting partner at all 8 activations", "Year-round SemiAnalysis content integration", "Priority audience curation at every event", "Quarterly strategy sessions and reporting", "Custom activation design for flagship events"], highlight: true },
-              { tier: "Flagship", desc: "Anchor 1-2 marquee events", features: ["Title sponsor of NeurIPS and/or COLM boat cruise", "Maximum brand presence at the biggest moments", "VIP guest curation and seating", "Full event recap documentary production"], highlight: false },
-            ].map((t, i) => (
+            {tiers.map((t, i) => (
               <FadeIn key={t.tier} delay={i * 100}>
                 <div style={{
                   background: t.highlight ? `linear-gradient(135deg, ${C.amber}0A, ${C.blue}08)` : C.glass,
@@ -1164,7 +956,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
 
         {/* ─── FOOTER ─── */}
         <footer style={{ borderTop: `1px solid ${C.glassBorder}`, padding: "32px", textAlign: "center" }}>
-          <div style={{ fontFamily: mn, fontSize: 11, color: C.txd, letterSpacing: "1px" }}>SemiAnalysis &copy; 2026 — Confidential</div>
+          <div style={{ fontFamily: mn, fontSize: 11, color: C.txd, letterSpacing: "1px" }}>{footer}</div>
         </footer>
       </div>
     </div>
@@ -1175,12 +967,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
    TESTIMONIALS
    ═══════════════════════════════════════════════════════════ */
 function Testimonials() {
-  const quotes = [
-    { quote: "The SemiAnalysis NeurIPS cruise was the single best networking event I attended all year. Every conversation was high-signal.", author: "VP of Engineering", company: "AI Startup (Series C)" },
-    { quote: "Unlike typical conference happy hours, every person I talked to actually understood the infrastructure stack. That never happens.", author: "Director of Cloud Architecture", company: "Fortune 500" },
-    { quote: "I made three partnerships at the Computex banquet that turned into signed contracts within 60 days.", author: "CEO", company: "Sovereign Cloud Provider" },
-    { quote: "SemiAnalysis events feel exclusive without being exclusionary. The curation is what makes the difference.", author: "ML Research Lead", company: "Top 3 AI Lab" },
-  ];
+  const { testimonials: quotes } = useSiteConfig();
 
   return (
     <section style={{ padding: "80px 32px" }}>
@@ -1212,6 +999,7 @@ function Testimonials() {
    INTEREST FORM
    ═══════════════════════════════════════════════════════════ */
 function InterestForm() {
+  const { events: EVENTS } = useSiteConfig();
   const [form, setForm] = useState({ name: "", email: "", role: "", events: new Set<string>(), notes: "" });
   const [submitted, setSubmitted] = useState(false);
   const toggleEvent = (name: string) => { const next = new Set(form.events); next.has(name) ? next.delete(name) : next.add(name); setForm({ ...form, events: next }); };
@@ -1305,7 +1093,16 @@ const TABS_PUBLIC = [
   { key: "calendar", label: "Calendar" },
 ];
 
-export default function EventsClient() {
+export default function EventsClient({ config }: { config: SiteConfig }) {
+  return (
+    <SiteConfigContext.Provider value={config}>
+      <EventsClientInner />
+    </SiteConfigContext.Provider>
+  );
+}
+
+function EventsClientInner() {
+  const { host, partner } = useSiteConfig();
   const [active, setActive] = useState(0);
 
   return (
@@ -1345,9 +1142,9 @@ export default function EventsClient() {
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <img src="/images/events/semianalysis.png" alt="SemiAnalysis" style={{ height: 22, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
+          <img src={host.logo} alt={host.name} style={{ height: 22, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
           <span style={{ color: C.txd, fontSize: 20, fontWeight: 200 }}>{"\u00D7"}</span>
-          <img src="/images/events/aws.svg" alt="AWS" style={{ height: 18, objectFit: "contain" }} />
+          <img src={partner.logo} alt={partner.name} style={{ height: 18, objectFit: "contain" }} />
         </div>
 
         <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 3 }}>
