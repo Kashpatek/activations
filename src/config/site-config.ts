@@ -19,6 +19,7 @@ export type EventItem = {
   ourPlan: string;
   whyItMatters: string;
   activationSteps: { phase: string; timing: string; tasks: string[] }[];
+  internalNote?: string;
 };
 
 export type StatItem = { value: string; label: string; sub: string };

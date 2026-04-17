@@ -134,6 +134,8 @@ const TOC_ITEMS = [
   { id: "why", label: "Why Us" },
   { id: "benefits", label: "Benefits" },
   { id: "tiers", label: "Tiers" },
+  { id: "strategize", label: "Strategize" },
+  { id: "close", label: "Why Now" },
   { id: "cta", label: "Partner" },
 ];
 
@@ -948,8 +950,14 @@ function OverviewTab({ internal }: { internal: boolean }) {
           </div>
         </section>
 
+        {/* ─── BUDGET STRATEGIZER ─── */}
+        <BudgetStrategizer />
+
         {/* ─── TESTIMONIALS ─── */}
         <Testimonials />
+
+        {/* ─── CLOSING PITCH ─── */}
+        <ClosingPitch />
 
         {/* ─── CTA ─── */}
         <InterestForm />
@@ -960,6 +968,161 @@ function OverviewTab({ internal }: { internal: boolean }) {
         </footer>
       </div>
     </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BUDGET STRATEGIZER — interactive slider
+   ═══════════════════════════════════════════════════════════ */
+function BudgetStrategizer() {
+  const { events: EVENTS } = useSiteConfig();
+  const [budget, setBudget] = useState(600);
+  const min = 100;
+  const max = 2400;
+
+  const recommendation = useMemo(() => {
+    if (budget < 200) {
+      return { tier: "Tier 1", count: 1, label: "1 activation", color: C.teal };
+    }
+    if (budget < 800) {
+      const count = budget < 500 ? 2 : 3;
+      return { tier: "Tier 2", count, label: `${count} activations`, color: C.amber };
+    }
+    return { tier: "Tier 3", count: EVENTS.length, label: "Full calendar", color: C.coral };
+  }, [budget, EVENTS.length]);
+
+  const maxFit = useMemo(() => {
+    if (budget <= 100) return 1;
+    if (budget <= 250) return Math.min(2, EVENTS.length);
+    if (budget <= 600) return Math.min(3, EVENTS.length);
+    if (budget <= 1200) return Math.min(5, EVENTS.length);
+    return EVENTS.length;
+  }, [budget, EVENTS.length]);
+
+  const suggested = EVENTS.slice(0, maxFit);
+
+  // Matches 2025 actuals: 2,400+ decision-makers across 8 activations.
+  const decisionMakersPerEvent = 300;
+  const totalDecisionMakers = maxFit * decisionMakersPerEvent;
+  const costPerDecisionMaker = totalDecisionMakers > 0 ? Math.round((budget * 1000) / totalDecisionMakers) : 0;
+
+  return (
+    <section id="strategize" style={{ padding: "100px 32px", background: "rgba(255,255,255,0.01)" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <SectionLabel>Plan Your Spend</SectionLabel>
+          <SectionTitle>Budget Strategizer</SectionTitle>
+          <p style={{ fontFamily: ft, fontSize: 17, color: C.txm, lineHeight: 1.7, maxWidth: 620, marginBottom: 40 }}>
+            Drag the slider to your budget. We'll map it to the right tier and suggest which activations give you the highest return.
+          </p>
+        </FadeIn>
+
+        <FadeIn delay={100}>
+          <GlassCard style={{ padding: "36px 40px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20, flexWrap: "wrap", gap: 16 }}>
+              <div>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6 }}>Your Budget</div>
+                <div style={{ fontFamily: gf, fontSize: 56, fontWeight: 900, color: C.tx, lineHeight: 1, letterSpacing: "-2px" }}>
+                  ${budget}<span style={{ fontSize: 24, color: C.txm, fontWeight: 700 }}>K</span>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6 }}>Recommended</div>
+                <div style={{ fontFamily: ft, fontSize: 22, fontWeight: 800, color: recommendation.color }}>{recommendation.tier}</div>
+                <div style={{ fontFamily: mn, fontSize: 12, color: C.txm, marginTop: 2 }}>{recommendation.label}</div>
+              </div>
+            </div>
+
+            <input
+              type="range"
+              min={min}
+              max={max}
+              step={50}
+              value={budget}
+              onChange={(e) => setBudget(Number(e.target.value))}
+              style={{
+                width: "100%",
+                accentColor: recommendation.color,
+                height: 6,
+                cursor: "pointer",
+              }}
+            />
+            <div style={{ display: "flex", justifyContent: "space-between", fontFamily: mn, fontSize: 10, color: C.txd, marginTop: 8 }}>
+              <span>$100K</span>
+              <span>$600K</span>
+              <span>$1.2M</span>
+              <span>$2.4M+</span>
+            </div>
+
+            <div data-grid-responsive style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 36 }}>
+              <div style={{ padding: "18px 20px", background: "rgba(255,255,255,0.02)", borderRadius: 12, border: `1px solid ${C.glassBorder}` }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>Events You Can Anchor</div>
+                <div style={{ fontFamily: gf, fontSize: 32, fontWeight: 900, color: C.amber, lineHeight: 1 }}>{maxFit}</div>
+                <div style={{ fontFamily: ft, fontSize: 12, color: C.txm, marginTop: 4 }}>of {EVENTS.length} on the calendar</div>
+              </div>
+              <div style={{ padding: "18px 20px", background: "rgba(255,255,255,0.02)", borderRadius: 12, border: `1px solid ${C.glassBorder}` }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>Decision-Makers Reached</div>
+                <div style={{ fontFamily: gf, fontSize: 32, fontWeight: 900, color: C.blue, lineHeight: 1 }}>{totalDecisionMakers.toLocaleString()}</div>
+                <div style={{ fontFamily: ft, fontSize: 12, color: C.txm, marginTop: 4 }}>est. ~300 per activation (2025 avg)</div>
+              </div>
+              <div style={{ padding: "18px 20px", background: "rgba(255,255,255,0.02)", borderRadius: 12, border: `1px solid ${C.glassBorder}` }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>Cost per Decision-Maker</div>
+                <div style={{ fontFamily: gf, fontSize: 32, fontWeight: 900, color: C.teal, lineHeight: 1 }}>${costPerDecisionMaker}</div>
+                <div style={{ fontFamily: ft, fontSize: 12, color: C.txm, marginTop: 4 }}>vs. $150\u2013300 at trade shows</div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 32 }}>
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14, fontWeight: 700 }}>Suggested Calendar</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {suggested.map((ev) => (
+                  <div key={ev.name} style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "10px 14px", borderRadius: 10,
+                    background: ev.color + "0A", border: `1px solid ${ev.color}30`,
+                  }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                      <img src={ev.logo} alt={ev.name} style={{ width: 20, height: 20, objectFit: "contain", filter: ev.logo.endsWith(".svg") ? "brightness(0) invert(1)" : "none" }} />
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: ft, fontSize: 13, fontWeight: 700, color: C.tx }}>{ev.name}</div>
+                      <div style={{ fontFamily: mn, fontSize: 10, color: C.txd }}>{ev.dates.split(",")[0]}</div>
+                    </div>
+                  </div>
+                ))}
+                {EVENTS.slice(maxFit).map((ev) => (
+                  <div key={ev.name} style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "10px 14px", borderRadius: 10,
+                    background: "rgba(255,255,255,0.02)", border: `1px dashed ${C.glassBorder}`,
+                    opacity: 0.45,
+                  }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                      <img src={ev.logo} alt={ev.name} style={{ width: 20, height: 20, objectFit: "contain", filter: "grayscale(1) brightness(0.7)" }} />
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: ft, fontSize: 13, fontWeight: 600, color: C.txm }}>{ev.name}</div>
+                      <div style={{ fontFamily: mn, fontSize: 10, color: C.txd }}>upgrade to add</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 28, display: "flex", justifyContent: "flex-end" }}>
+              <a href="#cta" onClick={(e) => { e.preventDefault(); document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" }); }}
+                style={{
+                  fontFamily: ft, fontSize: 14, fontWeight: 800, color: "#060608",
+                  background: `linear-gradient(135deg, ${C.amber}, #E8A020)`,
+                  padding: "12px 28px", borderRadius: 10, textDecoration: "none",
+                }}>
+                Build my {recommendation.tier} plan {"\u2192"}
+              </a>
+            </div>
+          </GlassCard>
+        </FadeIn>
+      </div>
+    </section>
   );
 }
 
@@ -990,6 +1153,94 @@ function Testimonials() {
             </FadeIn>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CLOSING PITCH — why AWS, why now
+   ═══════════════════════════════════════════════════════════ */
+function ClosingPitch() {
+  const { partner } = useSiteConfig();
+
+  const proofPoints = [
+    { stat: "750", label: `${partner.name}-eligible attendees at NeurIPS 2025`, note: "Our format. Our curation. Our guest list." },
+    { stat: "94%", label: "Return rate across flagship activations", note: "Buyers don't come once — they come back." },
+    { stat: "38%", label: "Academia, 18% Big Tech, 12% AI startups", note: "The audience your GTM team is trying to reach." },
+    { stat: "$40\u201380", label: `Cost per decision-maker vs. $150\u2013300 traditional`, note: "3\u20135x more efficient than standard conference sponsorship." },
+  ];
+
+  const risks = [
+    { title: "The venue window closes first", body: `Computex banquet and NeurIPS vessel are already booked. Holding them costs us real dollars. Other partners are in conversation \u2014 we want ${partner.name} first.` },
+    { title: "Audience curation starts 8\u201312 weeks out", body: "The best attendees don't respond to last-minute invites. Locking the partnership now means we build the guest list with AWS in mind from day one." },
+    { title: "2027 renewal is decided by 2026 performance", body: `Strong partners become default partners. Anchoring the 2026 calendar is the lowest-risk way to own 2027\u20132028 across the same community.` },
+  ];
+
+  return (
+    <section id="close" style={{ padding: "100px 32px", background: "rgba(255,255,255,0.015)" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <SectionLabel>Why {partner.name}, Why Now</SectionLabel>
+          <SectionTitle>The Case for Moving This Quarter</SectionTitle>
+          <p style={{ fontFamily: ft, fontSize: 17, color: C.txm, lineHeight: 1.7, maxWidth: 640, marginBottom: 48 }}>
+            AI infrastructure is the largest capex cycle of our generation, and the decisions are being made right now in rooms we're building. Every quarter {partner.name} waits, a competitor partner anchors a venue we can't re-open.
+          </p>
+        </FadeIn>
+
+        {/* Proof row */}
+        <FadeIn delay={100}>
+          <div data-grid-responsive style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 48 }}>
+            {proofPoints.map((p, i) => (
+              <GlassCard key={i} style={{ padding: "22px 20px", height: "100%" }}>
+                <div style={{ fontFamily: gf, fontSize: 36, fontWeight: 900, color: C.amber, lineHeight: 1, letterSpacing: "-1.5px", marginBottom: 8 }}>{p.stat}</div>
+                <div style={{ fontFamily: ft, fontSize: 13, fontWeight: 700, color: C.tx, marginBottom: 8, lineHeight: 1.4 }}>{p.label}</div>
+                <div style={{ fontFamily: ft, fontSize: 12, color: C.txm, lineHeight: 1.5 }}>{p.note}</div>
+              </GlassCard>
+            ))}
+          </div>
+        </FadeIn>
+
+        {/* Why now */}
+        <FadeIn delay={150}>
+          <div style={{ marginBottom: 48 }}>
+            <div style={{ fontFamily: mn, fontSize: 10, color: C.coral, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 20, fontWeight: 700 }}>What's at Stake if We Wait</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {risks.map((r, i) => (
+                <GlassCard key={i} style={{ padding: "20px 24px", borderLeft: `3px solid ${C.coral}` }}>
+                  <div style={{ fontFamily: ft, fontSize: 16, fontWeight: 800, color: C.tx, marginBottom: 6 }}>{r.title}</div>
+                  <div style={{ fontFamily: ft, fontSize: 14, color: C.txm, lineHeight: 1.6 }}>{r.body}</div>
+                </GlassCard>
+              ))}
+            </div>
+          </div>
+        </FadeIn>
+
+        {/* The ask */}
+        <FadeIn delay={200}>
+          <GlassCard style={{ padding: "40px 44px", background: `linear-gradient(135deg, ${C.amber}0C, ${C.blue}08)`, border: `1px solid ${C.amber}30` }}>
+            <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2.5px", textTransform: "uppercase", marginBottom: 12, fontWeight: 700 }}>The Ask</div>
+            <div style={{ fontFamily: gf, fontSize: 32, fontWeight: 900, color: C.tx, lineHeight: 1.2, letterSpacing: "-1px", marginBottom: 18 }}>
+              30 minutes this week. A decision by end of Q1.
+            </div>
+            <div style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, marginBottom: 24, maxWidth: 680 }}>
+              We'll walk through the calendar, pick the 2\u20133 events that best match your GTM priorities, and sketch a tier together. You don't need a budget number today \u2014 you need to see which rooms {partner.name} should own in 2026. We'll do the math from there.
+            </div>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <a href="#cta" onClick={(e) => { e.preventDefault(); document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" }); }} style={{
+                fontFamily: ft, fontSize: 15, fontWeight: 800, color: "#060608",
+                background: `linear-gradient(135deg, ${C.amber}, #E8A020)`,
+                padding: "14px 32px", borderRadius: 12, textDecoration: "none",
+                boxShadow: `0 4px 20px ${C.amber}30`,
+              }}>Book the 30 min {"\u2192"}</a>
+              <a href="#strategize" onClick={(e) => { e.preventDefault(); document.getElementById("strategize")?.scrollIntoView({ behavior: "smooth" }); }} style={{
+                fontFamily: ft, fontSize: 15, fontWeight: 700, color: C.amber,
+                border: `1px solid ${C.amber}30`, background: "transparent",
+                padding: "14px 32px", borderRadius: 12, textDecoration: "none",
+              }}>Model the budget first</a>
+            </div>
+          </GlassCard>
+        </FadeIn>
       </div>
     </section>
   );

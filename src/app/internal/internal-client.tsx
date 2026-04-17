@@ -48,7 +48,7 @@ const EVENTS = [
     activationSteps: [
       { phase: "Partnership Alignment", timing: "6 weeks out", tasks: ["Confirm sponsorship tier and budget allocation", "Align on branding guidelines and co-marketing assets", "Define target attendee profile and invite list criteria", "Set KPIs: target 200 attendees, 60%+ senior engineers"] },
       { phase: "Venue & Logistics", timing: "4 weeks out", tasks: ["Secure venue near convention center (rooftop bar or upscale lounge)", "Book catering — craft cocktails + elevated appetizers", "Arrange AV setup for brief welcome remarks", "Design and order co-branded signage, name badges, lanyards"] },
-      { phase: "Audience Building", timing: "3 weeks out", tasks: ["Launch invite campaign via SemiAnalysis newsletter (200K+ subscribers)", "Targeted outreach to MLSys registered attendees", "Social media promotion across SemiAnalysis channels", "Personal invites to top 50 target attendees from SA network"] },
+      { phase: "Audience Building", timing: "3 weeks out", tasks: ["Launch invite campaign via SemiAnalysis newsletter (200K+ subscribers)", "Targeted outreach to MLSys registered attendees", "Social media promotion across SemiAnalysis channels", "Personal invites to top 50 target attendees from SemiAnalysis network"] },
       { phase: "Event Execution", timing: "Day of", tasks: ["Venue setup 3 hours prior — signage, check-in, AV test", "Check-in with QR codes for attendee tracking", "Welcome remarks from SemiAnalysis + AWS representatives (5 min)", "Facilitated networking — no formal programming, organic conversations"] },
       { phase: "Post-Event", timing: "1 week after", tasks: ["Attendee survey — engagement, satisfaction, follow-up interest", "Compile attendee list with company/role for AWS sales follow-up", "Photo/video highlights package for social + internal reporting", "ROI report: attendance, seniority breakdown, follow-up pipeline"] },
     ],
@@ -164,6 +164,29 @@ const EVENTS = [
     ],
   },
   {
+    name: "SemiAnalysis Summit",
+    dates: "October 2026",
+    location: "TBA",
+    tag: "PREMIUM",
+    color: C.violet,
+    status: "proposed" as ActivationStatus,
+    activation: "Flagship SemiAnalysis Event",
+    logo: "/images/events/semianalysis.png",
+    monthIndex: 9, dayStart: 15, dayEnd: 17,
+    about: "The SemiAnalysis Summit is our flagship owned event — a curated gathering of the most senior operators, researchers, and executives in AI infrastructure. Invite-only, no expo floor, no noise. The single moment each year when the entire SemiAnalysis community convenes in one room.",
+    audience: "CTOs, VP Engs, hyperscaler and frontier-lab leadership, sovereign cloud executives, and the investors funding the AI compute buildout. The 300–400 people whose decisions set the direction of the industry.",
+    ourPlan: "A multi-day Summit combining curated talks, closed-door roundtables, and a premium evening experience. AWS as presenting partner gets named-sponsor rights, a keynote moment, and first look at the attendee list. Because this is our owned event, sponsor integration goes deeper than any third-party conference allows.",
+    whyItMatters: "Owned events outperform sponsored ones because we control the invite list, the programming, and the narrative. The Summit is the highest-leverage moment of the year: one room, 300–400 decision-makers, 100% of them reachable by AWS afterward through SemiAnalysis's warm channel.",
+    internalNote: "Tie to OCP and SemiAnalysis internal offsite — leverage overlapping travel week and co-locate execution. Do not surface publicly.",
+    activationSteps: [
+      { phase: "Partnership Alignment", timing: "14 weeks out", tasks: ["Confirm AWS as presenting partner + co-naming rights", "Align keynote speaker and programming integration", "Set attendee targets: 300–400, 70%+ Director+", "Lock venue and production budget"] },
+      { phase: "Program Design", timing: "10 weeks out", tasks: ["Curate speaker lineup across SemiAnalysis + AWS + external voices", "Design Day 1 main stage + Day 2 roundtables + evening experience", "Co-develop AWS-led session on AI infrastructure outlook", "Create event microsite and invite page"] },
+      { phase: "Audience Building", timing: "8 weeks out", tasks: ["Launch invite-only campaign via SemiAnalysis CRM", "VIP outreach to top 150 target attendees", "Newsletter series building to Summit", "Coordinate with OCP week cross-traffic"] },
+      { phase: "Event Execution", timing: "Day of", tasks: ["Full venue production + branded experience", "Main stage programming with AWS keynote slot", "Closed-door roundtables (capped at 15 per room)", "Evening networking experience with press opportunity"] },
+      { phase: "Post-Event", timing: "2 weeks after", tasks: ["Professional photo/video + mini-documentary", "Attendee list + sentiment report delivered to AWS", "SemiAnalysis recap content series", "Pipeline + ROI report + 2027 renewal proposal"] },
+    ],
+  },
+  {
     name: "COLM",
     dates: "Oct 6–9, 2026",
     location: "San Francisco, CA",
@@ -234,7 +257,7 @@ const AUDIENCE_BREAKDOWN = [
 
 const WHY_US = [
   { title: "200K+ Newsletter Subscribers", body: "The most-read independent publication covering semiconductors, AI infrastructure, and compute. 200,000+ AI and semiconductor industry professionals, researchers, investors, and enthusiasts.", icon: "\u2709" },
-  { title: "1M+ YouTube Views / Month", body: "Deep-dive technical content that decision-makers actively seek. Not impressions — engagement from the people who spec, architect, and sign.", icon: "\u25B6" },
+  { title: "3M+ Monthly Reach", body: "Across newsletter, long-form research, video, and social — SemiAnalysis reaches 3M+ professionals every month. Not impressions. Engagement from the people who spec, architect, procure, and sign.", icon: "\u25B6" },
   { title: "Trusted Industry Voice", body: "Cited by Bloomberg, Financial Times, and The Information. When SemiAnalysis speaks, the semiconductor and AI community listens and acts.", icon: "\u2606" },
   { title: "750 at NeurIPS 2025", body: "Our boat cruise with SAIL drew 750 attendees and 680 decision-makers — 38% academia, 18% Big Tech, 12% AI startups. The format is proven.", icon: "\u2605" },
 ];
@@ -607,6 +630,17 @@ function EventCard({ ev, index }: { ev: typeof EVENTS[0]; index: number }) {
               <div style={{ fontFamily: mn, fontSize: 10, color: col, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8, fontWeight: 700 }}>Why It Matters for AWS</div>
               <div style={{ fontFamily: ft, fontSize: 14, color: C.txm, lineHeight: 1.7 }}>{ev.whyItMatters}</div>
             </div>
+
+            {/* Internal Note — internal page only */}
+            {(ev as any).internalNote && (
+              <div style={{ marginBottom: 28, padding: "14px 18px", background: C.coral + "08", border: `1px solid ${C.coral}25`, borderRadius: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px", fontWeight: 700 }}>INTERNAL</span>
+                  <span style={{ fontFamily: mn, fontSize: 10, color: C.coral, letterSpacing: "2px", textTransform: "uppercase", fontWeight: 700 }}>Team Note</span>
+                </div>
+                <div style={{ fontFamily: ft, fontSize: 13, color: C.tx, lineHeight: 1.6 }}>{(ev as any).internalNote}</div>
+              </div>
+            )}
 
             {/* Step-by-step process */}
             <div style={{ fontFamily: mn, fontSize: 10, color: col, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16, fontWeight: 700 }}>Activation Process</div>
@@ -1065,7 +1099,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
             <SectionLabel>The Partnership</SectionLabel>
             <SectionTitle>Why SemiAnalysis?</SectionTitle>
             <p style={{ fontFamily: ft, fontSize: 17, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 48 }}>
-              We don't just reach the AI infrastructure community — we are the AI infrastructure community. Our audience isn't passive subscribers. They're the engineers, researchers, and executives building the future of compute.
+              We don't just reach the AI infrastructure community — we are the AI infrastructure community. Our audience isn't passive subscribers. They're the engineers, researchers, and executives building the future of compute. We earn their attention the hard way: with primary research, technical depth, and reporting that gets cited in boardrooms, earnings calls, and engineering decisions. When AWS shows up inside a SemiAnalysis activation, you're not renting attention — you're standing next to the most trusted independent voice in the category, in front of the exact people whose purchase decisions move your revenue.
             </p>
           </FadeIn>
 
@@ -1095,7 +1129,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
               {[
                 { title: "Brand Positioning", items: ["Presenting partner branding at every activation", "Co-branded content across SemiAnalysis channels (200K+ subscribers)", "Association with the most trusted voice in AI infrastructure", "Premium placement — not a logo wall, a real partnership"] },
                 { title: "Audience Access", items: ["Direct access to 2,400+ decision-makers across 8 events", "Curated introductions to target accounts at every activation", "Pre- and post-event attendee data for sales pipeline building", "78% Director+ seniority — the people who sign and decide"] },
-                { title: "Content & Reach", items: ["SemiAnalysis newsletter features (200K+ subscribers)", "YouTube integration (1M+ monthly views)", "Event recap content and social media amplification", "Year-round brand presence beyond event days"] },
+                { title: "Content & Reach", items: ["Newsletter features to 200K+ subscribers", "3M+ total monthly reach across owned channels", "Event recap content and social media amplification", "Year-round brand presence beyond event days"] },
               ].map((col, i) => (
                 <FadeIn key={col.title} delay={i * 100}>
                   <GlassCard style={{ padding: "28px 24px", height: "100%" }}>
@@ -1182,10 +1216,12 @@ function ROICalculator() {
     setSelected(next);
   };
 
+  // Per-event averages derived from 2025 actuals: 3,100+ attendees / 8 events = ~388 avg,
+  // with 2,400+ decision-makers (~300/event) and 78% Director+ seniority at flagships.
   const count = selected.size;
-  const estAttendees = count * 350;
-  const estDecisionMakers = Math.round(estAttendees * 0.68);
-  const estCountries = Math.min(count * 2 + 4, 18);
+  const estAttendees = count * 388;
+  const estDecisionMakers = count * 300;
+  const estCountries = Math.min(count * 2 + 3, 14);
   const estFollowUps = Math.round(estDecisionMakers * 0.35);
 
   return (
@@ -1263,56 +1299,6 @@ function ROICalculator() {
     </section>
   );
 }
-
-/* ═══════════════════════════════════════════════════════════
-   INTERNAL-ONLY: COMPARISON TABLE
-   ═══════════════════════════════════════════════════════════ */
-function ComparisonTable() {
-  const rows = [
-    { metric: "Avg. Attendee Seniority", sa: "78% Director+", trad: "~30% Director+", winner: "sa" },
-    { metric: "Cost per Decision-Maker", sa: "$40-80", trad: "$150-300", winner: "sa" },
-    { metric: "Format", sa: "Curated experiences (dinners, cruises, HHs)", trad: "Booth + badge scan", winner: "sa" },
-    { metric: "Follow-Up Quality", sa: "Warm intros, shared experience", trad: "Cold lead list", winner: "sa" },
-    { metric: "Content Amplification", sa: "200K newsletter + 1M YT views/mo", trad: "Logo on website", winner: "sa" },
-    { metric: "Brand Association", sa: "Trusted industry authority", trad: "One of many sponsors", winner: "sa" },
-    { metric: "Attendee Return Rate", sa: "94% would attend again", trad: "~40% industry avg", winner: "sa" },
-    { metric: "Geographic Reach", sa: "3 continents, 14+ countries", trad: "Single venue", winner: "sa" },
-  ];
-
-  return (
-    <section style={{ padding: "80px 32px", background: "rgba(255,255,255,0.01)" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <FadeIn>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <SectionLabel>Competitive Edge</SectionLabel>
-            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
-          </div>
-          <SectionTitle>SA Events vs. Traditional Sponsorship</SectionTitle>
-        </FadeIn>
-
-        <FadeIn delay={100}>
-          <GlassCard style={{ overflow: "hidden", marginTop: 32 }}>
-            {/* Header */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: `1px solid ${C.glassBorder}`, padding: "16px 24px", background: "rgba(255,255,255,0.02)" }}>
-              <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase" }}>Metric</div>
-              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "1.5px", textTransform: "uppercase" }}>SemiAnalysis Events</div>
-              <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase" }}>Traditional Sponsorship</div>
-            </div>
-            {/* Rows */}
-            {rows.map((r, i) => (
-              <div key={r.metric} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: i < rows.length - 1 ? `1px solid ${C.glassBorder}` : "none", padding: "14px 24px", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
-                <div style={{ fontFamily: ft, fontSize: 13, color: C.txm }}>{r.metric}</div>
-                <div style={{ fontFamily: ft, fontSize: 13, color: C.amber, fontWeight: 700 }}>{r.sa}</div>
-                <div style={{ fontFamily: ft, fontSize: 13, color: C.txd }}>{r.trad}</div>
-              </div>
-            ))}
-          </GlassCard>
-        </FadeIn>
-      </div>
-    </section>
-  );
-}
-
 /* ═══════════════════════════════════════════════════════════
    TESTIMONIALS (both views)
    ═══════════════════════════════════════════════════════════ */
@@ -1790,39 +1776,6 @@ Let's make this incredible.
 Michelle`,
     },
     {
-      key: "talking-points",
-      title: "Talking Points for AWS Call",
-      subject: "",
-      body: `TALKING POINTS — AWS PARTNERSHIP CALL
-
-WHY NOW:
-- 2026 calendar is the most ambitious yet — 8 events, 3 continents
-- NeurIPS moving to Sydney = massive APAC opportunity
-- AI infrastructure spending is accelerating — AWS needs presence where decisions happen
-- Early commitment = best event placement and VIP curation
-
-OUR EDGE:
-- 200K+ newsletter subscribers — the buyer's table reads us
-- NeurIPS 2025 proof point: 750 attendees, 680 decision-makers, 38% academia, 18% Big Tech
-- 94% return rate — people don't just come once, they come back
-- Cost per decision-maker: $40-80 vs $150-300 for traditional sponsorship
-
-OBJECTION HANDLING:
-"We already sponsor conferences directly"
-→ Our events are the event-within-the-event. The people at our cruise are the same people who skip the expo floor. We reach them in a context where they're open to conversation, not scanning badges.
-
-"Budget is tight this year"
-→ Flexible tiers — Select (2-3 events) is a fraction of a single booth at re:Invent. And the audience quality is 3-5x higher.
-
-"How do we measure ROI?"
-→ Full post-event reporting: attendee list with company/role, seniority breakdown, follow-up pipeline, and sentiment survey. We measure what matters — conversations, not impressions.
-
-ASK:
-- Start with Premier tier (full season) as the recommendation
-- Fallback: Flagship tier anchoring NeurIPS + one more
-- Minimum: Select tier with 3 priority events`,
-    },
-    {
       key: "submissions-check",
       title: "View Form Submissions",
       subject: "",
@@ -1841,7 +1794,7 @@ This returns a JSON array of all submissions with name, email, role, selected ev
             <SectionLabel>Michelle's Toolkit</SectionLabel>
             <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
           </div>
-          <SectionTitle>Email Templates & Talking Points</SectionTitle>
+          <SectionTitle>Email Templates</SectionTitle>
           <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 32 }}>
             Ready-to-use templates for every stage of the AWS conversation. Click to copy, then paste and customize.
           </p>
@@ -2287,7 +2240,7 @@ function MarketingDeployment() {
       { phase: 2, task: `Personal VIP invites (top 50 targets)`, key: `${ev.name}-2-3` },
       { phase: 3, task: `Day-of setup + check-in system`, key: `${ev.name}-3-0` },
       { phase: 3, task: `Photo/video capture`, key: `${ev.name}-3-1` },
-      { phase: 3, task: `AWS + SA welcome remarks`, key: `${ev.name}-3-2` },
+      { phase: 3, task: `AWS + SemiAnalysis welcome remarks`, key: `${ev.name}-3-2` },
       { phase: 4, task: `Attendee survey sent`, key: `${ev.name}-4-0` },
       { phase: 4, task: `Attendee list compiled for AWS`, key: `${ev.name}-4-1` },
       { phase: 4, task: `ROI report delivered`, key: `${ev.name}-4-2` },
@@ -2375,127 +2328,6 @@ function MarketingDeployment() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   INTERNAL OPS: COLD EMAIL GENERATOR
-   ═══════════════════════════════════════════════════════════ */
-function ColdEmailGenerator() {
-  const [selectedEvent, setSelectedEvent] = useState(EVENTS[0].name);
-  const [persona, setPersona] = useState("VP Engineering");
-  const [company, setCompany] = useState("");
-  const [generated, setGenerated] = useState("");
-  const [copied, setCopied] = useState(false);
-
-  const personas = ["VP Engineering", "Head of Marketing", "Director of Cloud", "CTO", "Research Lead", "Investor", "Conference Organizer"];
-  const ev = EVENTS.find(e => e.name === selectedEvent) || EVENTS[0];
-
-  const generateEmail = () => {
-    const templates: Record<string, string> = {
-      "VP Engineering": `Subject: ${ev.name} ${ev.dates.split(",")[0]} — exclusive SemiAnalysis x AWS event\n\nHi${company ? ` [Name at ${company}]` : " [Name]"},\n\nI'm reaching out because you're someone who shapes how AI infrastructure gets built — and we're hosting something special at ${ev.name} in ${ev.location} (${ev.dates}).\n\nSemiAnalysis is partnering with AWS on a ${ev.activation.toLowerCase()} targeting the senior engineering and infrastructure community. This isn't a conference booth — it's a curated, invite-only experience designed for people at your level.\n\nOur last event drew 750 attendees with 78% Director+ seniority. The conversations are real, the connections last.\n\nWould you like me to reserve a spot for you?\n\nBest,\nMichelle\nSemiAnalysis`,
-      "Head of Marketing": `Subject: Partner opportunity — ${ev.name} activation with SemiAnalysis x AWS\n\nHi${company ? ` [Name at ${company}]` : " [Name]"},\n\nSemiAnalysis is building the most ambitious event activation calendar in AI infrastructure — and ${ev.name} in ${ev.location} (${ev.dates}) is one of our key moments.\n\nWe're looking for brand partners who want authentic access to the AI infrastructure buying community. Our format (${ev.activation.toLowerCase()}) consistently outperforms traditional sponsorship: $40-80 per decision-maker vs $150-300 at standard conferences, with 78% Director+ seniority.\n\nWould a partnership conversation make sense for your team?\n\nBest,\nMichelle\nSemiAnalysis`,
-      "Director of Cloud": `Subject: You're invited — ${ev.name} with SemiAnalysis x AWS\n\nHi${company ? ` [Name at ${company}]` : " [Name]"},\n\nSemiAnalysis is hosting a ${ev.activation.toLowerCase()} at ${ev.name} in ${ev.location} (${ev.dates}), co-presented with AWS.\n\nWe're curating the guest list around cloud infrastructure decision-makers — people building and buying at scale. Given your role, you'd be exactly who we want in the room.\n\n200K+ newsletter subscribers trust us for AI infrastructure insights. Our events are where that community gathers in person.\n\nInterested in an invite?\n\nBest,\nMichelle\nSemiAnalysis`,
-      "CTO": `Subject: ${ev.name} — join the AI infrastructure conversation\n\nHi${company ? ` [Name at ${company}]` : " [Name]"},\n\nSemiAnalysis x AWS is hosting a ${ev.activation.toLowerCase()} at ${ev.name} (${ev.dates}, ${ev.location}).\n\nWe're building the guest list around CTOs and technical leaders who are shaping AI infrastructure decisions. The format is intimate, the people are senior, and the conversations go deeper than any expo floor.\n\nOur NeurIPS 2025 event drew 680 decision-makers. ${ev.name} will be similarly curated.\n\nShould I add you to the list?\n\nBest,\nMichelle\nSemiAnalysis`,
-      "Research Lead": `Subject: ${ev.name} — research community activation with SemiAnalysis\n\nHi${company ? ` [Name at ${company}]` : " [Name]"},\n\nSemiAnalysis is organizing a special ${ev.activation.toLowerCase()} alongside ${ev.name} in ${ev.location} (${ev.dates}).\n\nThis is designed for the research community — an intimate gathering of ML researchers, infrastructure architects, and the people pushing the frontier. No sales pitches, just high-signal conversations with peers.\n\nWould you like to be on the invite list?\n\nBest,\nMichelle\nSemiAnalysis`,
-      "Investor": `Subject: ${ev.name} — deal flow at the frontier\n\nHi${company ? ` [Name at ${company}]` : " [Name]"},\n\nSemiAnalysis is hosting a ${ev.activation.toLowerCase()} at ${ev.name} (${ev.dates}, ${ev.location}) co-presented with AWS.\n\nOur guest list reads like a cap table wish list — CTOs, VP Engs, and research leads from the companies building AI infrastructure. If you're looking at the AI compute stack, this is the room to be in.\n\nInterested?\n\nBest,\nMichelle\nSemiAnalysis`,
-      "Conference Organizer": `Subject: Collaboration at ${ev.name}?\n\nHi${company ? ` [Name at ${company}]` : " [Name]"},\n\nSemiAnalysis is planning a ${ev.activation.toLowerCase()} alongside ${ev.name} in ${ev.location} (${ev.dates}). We're partnering with AWS on this one.\n\nWe'd love to explore ways to coordinate — whether that's cross-promotion, shared logistics, or complementary programming. Our events consistently draw 200-400 senior attendees and we're always looking to build with the organizer community.\n\nWould a quick call make sense?\n\nBest,\nMichelle\nSemiAnalysis`,
-    };
-    setGenerated(templates[persona] || templates["VP Engineering"]);
-  };
-
-  return (
-    <section style={{ padding: "80px 32px", background: "rgba(255,255,255,0.01)" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <FadeIn>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <SectionLabel>Cold Email Generator</SectionLabel>
-            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
-          </div>
-          <SectionTitle>Outreach Templates by Event & Persona</SectionTitle>
-          <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 32 }}>
-            Select an event and target persona to generate a tailored cold email. Copy and customize before sending.
-          </p>
-        </FadeIn>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
-          {/* Controls */}
-          <FadeIn>
-            <div>
-              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, fontWeight: 700 }}>Event</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
-                {EVENTS.map(e => (
-                  <button key={e.name} onClick={() => setSelectedEvent(e.name)} style={{
-                    fontFamily: ft, fontSize: 12, fontWeight: selectedEvent === e.name ? 700 : 500,
-                    color: selectedEvent === e.name ? "#060608" : C.txm,
-                    background: selectedEvent === e.name ? `linear-gradient(135deg, ${C.amber}, #E8A020)` : "rgba(255,255,255,0.03)",
-                    border: `1px solid ${selectedEvent === e.name ? C.amber : C.glassBorder}`,
-                    borderRadius: 10, padding: "8px 14px", cursor: "pointer", transition: "all 0.2s ease",
-                  }}>{e.name}</button>
-                ))}
-              </div>
-
-              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, fontWeight: 700 }}>Target Persona</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
-                {personas.map(p => (
-                  <button key={p} onClick={() => setPersona(p)} style={{
-                    fontFamily: ft, fontSize: 12, fontWeight: persona === p ? 700 : 500,
-                    color: persona === p ? "#060608" : C.txm,
-                    background: persona === p ? `linear-gradient(135deg, ${C.violet}, ${C.violet}cc)` : "rgba(255,255,255,0.03)",
-                    border: `1px solid ${persona === p ? C.violet : C.glassBorder}`,
-                    borderRadius: 10, padding: "8px 14px", cursor: "pointer", transition: "all 0.2s ease",
-                  }}>{p}</button>
-                ))}
-              </div>
-
-              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>Company (optional)</div>
-              <input value={company} onChange={e => setCompany(e.target.value)} placeholder="e.g. NVIDIA, Anthropic, Scale AI..."
-                style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 10, color: C.tx, fontFamily: ft, fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 20 }}
-                onFocus={e => { e.target.style.borderColor = C.amber; }}
-                onBlur={e => { e.target.style.borderColor = C.glassBorder; }}
-              />
-
-              <button onClick={generateEmail} style={{
-                fontFamily: ft, fontSize: 14, fontWeight: 800, color: "#060608",
-                background: `linear-gradient(135deg, ${C.amber}, #E8A020)`,
-                padding: "14px 32px", borderRadius: 12, border: "none", cursor: "pointer",
-                boxShadow: `0 4px 20px ${C.amber}30`,
-              }}>
-                Generate Email
-              </button>
-            </div>
-          </FadeIn>
-
-          {/* Output */}
-          <FadeIn delay={100}>
-            <div>
-              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, fontWeight: 700 }}>Generated Email</div>
-              {generated ? (
-                <div style={{ position: "relative" }}>
-                  <pre style={{
-                    fontFamily: ft, fontSize: 13, color: C.txm, lineHeight: 1.7,
-                    whiteSpace: "pre-wrap", wordBreak: "break-word",
-                    padding: 20, background: "rgba(0,0,0,0.3)", borderRadius: 14,
-                    border: `1px solid ${C.glassBorder}`, maxHeight: 500, overflow: "auto",
-                  }}>{generated}</pre>
-                  <button onClick={() => { navigator.clipboard.writeText(generated); setCopied(true); setTimeout(() => setCopied(false), 2000); }} style={{
-                    position: "absolute", top: 12, right: 12,
-                    fontFamily: mn, fontSize: 10, fontWeight: 700,
-                    color: copied ? "#4ADE80" : C.amber, background: copied ? "#4ADE8015" : C.amber + "10",
-                    border: `1px solid ${copied ? "#4ADE8030" : C.amber + "30"}`,
-                    borderRadius: 8, padding: "6px 14px", cursor: "pointer",
-                  }}>{copied ? "Copied!" : "Copy"}</button>
-                </div>
-              ) : (
-                <GlassCard style={{ padding: "40px 24px", textAlign: "center" }}>
-                  <div style={{ fontFamily: ft, fontSize: 14, color: C.txd }}>Select an event + persona and hit generate</div>
-                </GlassCard>
-              )}
-            </div>
-          </FadeIn>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════
    INTERNAL OPS: BUDGET TRACKER
    ═══════════════════════════════════════════════════════════ */
 function BudgetTracker() {
@@ -2511,11 +2343,14 @@ function BudgetTracker() {
     localStorage.setItem("sa-budgets", JSON.stringify(next));
   };
 
+  const toNum = (s: string) => parseFloat(String(s).replace(/[^0-9.-]/g, "")) || 0;
   const getEventTotal = (event: string) => {
-    return categories.reduce((sum, cat) => sum + (parseFloat(getValue(event, cat)) || 0), 0);
+    return categories.reduce((sum, cat) => sum + toNum(getValue(event, cat)), 0);
   };
 
   const grandTotal = EVENTS.reduce((sum, ev) => sum + getEventTotal(ev.name), 0);
+  const projectedDecisionMakers = EVENTS.reduce((sum, ev) => sum + (getEventTotal(ev.name) > 0 ? 300 : 0), 0);
+  const costPerDM = projectedDecisionMakers > 0 ? Math.round(grandTotal / projectedDecisionMakers) : 0;
 
   return (
     <section style={{ padding: "80px 32px" }}>
@@ -2529,8 +2364,23 @@ function BudgetTracker() {
           <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 12 }}>
             Track estimated costs per event. Data saves to your browser.
           </p>
-          <div style={{ fontFamily: mn, fontSize: 20, fontWeight: 700, color: C.amber, marginBottom: 32 }}>
-            Grand Total: ${grandTotal.toLocaleString()}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 24, marginBottom: 32 }}>
+            <div>
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>Grand Total</div>
+              <div style={{ fontFamily: mn, fontSize: 24, fontWeight: 700, color: C.amber }}>${grandTotal.toLocaleString()}</div>
+            </div>
+            {projectedDecisionMakers > 0 && (
+              <>
+                <div>
+                  <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>Projected Decision-Makers</div>
+                  <div style={{ fontFamily: mn, fontSize: 24, fontWeight: 700, color: C.blue }}>{projectedDecisionMakers.toLocaleString()}</div>
+                </div>
+                <div>
+                  <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>Cost / Decision-Maker</div>
+                  <div style={{ fontFamily: mn, fontSize: 24, fontWeight: 700, color: C.teal }}>${costPerDM.toLocaleString()}</div>
+                </div>
+              </>
+            )}
           </div>
         </FadeIn>
 
@@ -2653,7 +2503,6 @@ function InternalAnalyticsTab() {
       <div style={{ position: "relative", zIndex: 1, paddingTop: 80 }}>
         <StatusAdmin />
         <ROICalculator />
-        <ComparisonTable />
         <MichelleToolkit />
         <SubmissionsViewer />
         <MakeMichelleHappy />
@@ -3161,7 +3010,6 @@ function InternalOpsTab() {
         <ContactCRM />
         <EventCountdown />
         <MarketingDeployment />
-        <ColdEmailGenerator />
         <BudgetTracker />
         <ContentCalendar />
       </div>
