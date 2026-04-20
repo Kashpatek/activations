@@ -1,24 +1,14 @@
-import { writeFile, readFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { listAppend, listAll, STORAGE_BACKEND } from "@/lib/storage";
 
-const DATA_DIR = join("/tmp", "sa-activations");
-const FILE = join(DATA_DIR, "tracks.json");
-const MAX_EVENTS = 5000;
-
-async function ensureDir() {
-  try {
-    await mkdir(DATA_DIR, { recursive: true });
-  } catch {}
-}
-
-async function getTracks() {
-  try {
-    const raw = await readFile(FILE, "utf-8");
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
+type TrackEvent = {
+  event: string;
+  partner: string;
+  host: string;
+  metadata: Record<string, unknown>;
+  userAgent: string | null;
+  referrer: string | null;
+  at: string;
+};
 
 export async function POST(request: Request) {
   try {
@@ -28,9 +18,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "event required" }, { status: 400 });
     }
 
-    await ensureDir();
-    const tracks = await getTracks();
-    tracks.push({
+    const t: TrackEvent = {
       event,
       partner: partner || "Unknown",
       host: host || "SemiAnalysis",
@@ -38,18 +26,17 @@ export async function POST(request: Request) {
       userAgent: request.headers.get("user-agent") || null,
       referrer: request.headers.get("referer") || null,
       at: new Date().toISOString(),
-    });
+    };
 
-    const trimmed = tracks.length > MAX_EVENTS ? tracks.slice(-MAX_EVENTS) : tracks;
-    await writeFile(FILE, JSON.stringify(trimmed));
+    await listAppend("tracks", t);
 
-    return Response.json({ ok: true });
-  } catch {
-    return Response.json({ error: "Failed to track" }, { status: 500 });
+    return Response.json({ ok: true, backend: STORAGE_BACKEND });
+  } catch (e) {
+    return Response.json({ error: "Failed to track", detail: String(e) }, { status: 500 });
   }
 }
 
 export async function GET() {
-  const tracks = await getTracks();
+  const tracks = await listAll<TrackEvent>("tracks");
   return Response.json(tracks);
 }

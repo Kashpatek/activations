@@ -1,8 +1,16 @@
 // @ts-nocheck
 "use client";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, createContext, useContext } from "react";
 import { SiteConfigContext, useSiteConfig } from "@/config/site-config";
 import type { SiteConfig, ActivationStatus } from "@/config/site-config";
+
+// Shared state: Budget Strategizer pushes suggested events → Interest Form pre-fills
+type PlanContextShape = {
+  plan: string[];
+  setPlan: (events: string[]) => void;
+};
+const PlanContext = createContext<PlanContextShape>({ plan: [], setPlan: () => {} });
+function usePlan() { return useContext(PlanContext); }
 
 /* ═══════════════════════════════════════════════════════════
    DESIGN TOKENS
@@ -996,7 +1004,8 @@ function OverviewTab({ internal }: { internal: boolean }) {
    BUDGET STRATEGIZER — interactive slider
    ═══════════════════════════════════════════════════════════ */
 function BudgetStrategizer() {
-  const { events: EVENTS } = useSiteConfig();
+  const { events: EVENTS, partner, host } = useSiteConfig();
+  const { setPlan } = usePlan();
   const [budget, setBudget] = useState(600);
   const min = 100;
   const max = 2400;
@@ -1131,14 +1140,20 @@ function BudgetStrategizer() {
             </div>
 
             <div style={{ marginTop: 28, display: "flex", justifyContent: "flex-end" }}>
-              <a href="#cta" onClick={(e) => { e.preventDefault(); document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" }); }}
+              <button onClick={() => {
+                const names = suggested.map((ev) => ev.name);
+                setPlan(names);
+                fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "plan_applied", partner: partner.name, host: host.name, metadata: { budget, tier: recommendation.tier, events: names } }) }).catch(() => {});
+                document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" });
+              }}
                 style={{
                   fontFamily: ft, fontSize: 14, fontWeight: 800, color: "#060608",
                   background: `linear-gradient(135deg, ${C.amber}, #E8A020)`,
                   padding: "12px 28px", borderRadius: 10, textDecoration: "none",
+                  border: "none", cursor: "pointer",
                 }}>
                 Build my {recommendation.tier} plan {"\u2192"}
-              </a>
+              </button>
             </div>
           </GlassCard>
         </FadeIn>
@@ -1272,23 +1287,21 @@ function ClosingPitch() {
    ═══════════════════════════════════════════════════════════ */
 function InterestForm() {
   const { events: EVENTS, partner } = useSiteConfig();
+  const { plan } = usePlan();
   const [form, setForm] = useState({ name: "", email: "", role: "", events: new Set<string>(), notes: "" });
   const [submitted, setSubmitted] = useState(false);
   const toggleEvent = (name: string) => { const next = new Set(form.events); next.has(name) ? next.delete(name) : next.add(name); setForm({ ...form, events: next }); };
 
-  if (submitted) {
-    return (
-      <section id="cta" style={{ padding: "100px 32px", textAlign: "center" }}>
-        <FadeIn>
-          <div style={{ maxWidth: 600, margin: "0 auto" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>{"\u2713"}</div>
-            <h2 style={{ fontFamily: gf, fontSize: 36, fontWeight: 900, color: "#4ADE80", letterSpacing: "-1px", marginBottom: 12 }}>Interest Received</h2>
-            <p style={{ fontFamily: ft, fontSize: 17, color: C.txm, lineHeight: 1.7 }}>Thank you! We will reach out within 24 hours to discuss next steps.</p>
-          </div>
-        </FadeIn>
-      </section>
-    );
-  }
+  // Pre-populate events from the Budget Strategizer plan
+  useEffect(() => {
+    if (plan.length === 0) return;
+    setForm((prev) => ({ ...prev, events: new Set(plan) }));
+  }, [plan]);
+
+  const summary = useMemo(() => ({
+    count: form.events.size,
+    events: Array.from(form.events),
+  }), [form.events]);
 
   return (
     <section id="cta" style={{ padding: "100px 32px" }}>
@@ -1358,6 +1371,83 @@ function InterestForm() {
           </GlassCard>
         </FadeIn>
       </div>
+
+      {/* Thank-you overlay */}
+      {submitted && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 300,
+          background: "rgba(5, 5, 8, 0.8)",
+          backdropFilter: "blur(12px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 24,
+          animation: "fadeIn 0.3s ease",
+        }}>
+          <div style={{
+            maxWidth: 520, width: "100%",
+            background: "linear-gradient(135deg, #0a0a12, #0d0f1a)",
+            border: `1px solid ${C.glassBorder}`,
+            borderRadius: 20,
+            padding: "48px 40px",
+            textAlign: "center",
+            boxShadow: `0 20px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(74,222,128,0.15) inset`,
+            animation: "popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            position: "relative",
+          }}>
+            <button onClick={() => { setSubmitted(false); setForm({ name: "", email: "", role: "", events: new Set(), notes: "" }); }}
+              aria-label="Close"
+              style={{ position: "absolute", top: 14, right: 16, background: "none", border: "none", color: C.txd, fontSize: 22, cursor: "pointer", lineHeight: 1 }}>
+              {"\u00D7"}
+            </button>
+
+            <div style={{
+              width: 72, height: 72, borderRadius: "50%",
+              background: `radial-gradient(circle, #4ADE8025 0%, transparent 70%)`,
+              border: `2px solid #4ADE80`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 20px",
+              fontSize: 32, color: "#4ADE80",
+              animation: "checkPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s backwards",
+            }}>
+              {"\u2713"}
+            </div>
+
+            <h2 style={{ fontFamily: gf, fontSize: 32, fontWeight: 900, color: "#4ADE80", letterSpacing: "-1px", marginBottom: 10 }}>
+              Submission received
+            </h2>
+
+            <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, marginBottom: 24 }}>
+              Thanks{form.name ? `, ${form.name.split(" ")[0]}` : ""}. The SemiAnalysis team will reach out within 24 hours to walk through the calendar and shape your plan.
+            </p>
+
+            {summary.count > 0 && (
+              <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 8 }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", fontWeight: 700, marginBottom: 10 }}>Your {summary.count} selected event{summary.count > 1 ? "s" : ""}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
+                  {summary.events.map((name) => (
+                    <span key={name} style={{ fontFamily: mn, fontSize: 11, color: C.amber, background: C.amber + "10", border: `1px solid ${C.amber}25`, borderRadius: 8, padding: "4px 12px" }}>{name}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <style>{`
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes popIn {
+              0%   { opacity: 0; transform: translateY(20px) scale(0.96); }
+              100% { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @keyframes checkPop {
+              0%   { opacity: 0; transform: scale(0); }
+              60%  { transform: scale(1.2); }
+              100% { opacity: 1; transform: scale(1); }
+            }
+          `}</style>
+        </div>
+      )}
     </section>
   );
 }
@@ -1371,9 +1461,12 @@ const TABS_PUBLIC = [
 ];
 
 export default function EventsClient({ config }: { config: SiteConfig }) {
+  const [plan, setPlan] = useState<string[]>([]);
   return (
     <SiteConfigContext.Provider value={config}>
-      <EventsClientInner />
+      <PlanContext.Provider value={{ plan, setPlan }}>
+        <EventsClientInner />
+      </PlanContext.Provider>
     </SiteConfigContext.Provider>
   );
 }

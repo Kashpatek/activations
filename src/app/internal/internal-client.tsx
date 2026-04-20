@@ -28,6 +28,15 @@ const STATUS_CONFIG: Record<ActivationStatus, { label: string; color: string; bg
 };
 
 /* ═══════════════════════════════════════════════════════════
+   COMPANIES — prospects being pitched (internal-only list)
+   ═══════════════════════════════════════════════════════════ */
+const COMPANIES = [
+  { name: "AWS", color: "#FF9900" },
+  { name: "Lambda", color: "#7C3AED" },
+];
+const companyColor = (name: string) => COMPANIES.find(c => c.name === name)?.color || C.amber;
+
+/* ═══════════════════════════════════════════════════════════
    EVENT DATA — comprehensive
    ═══════════════════════════════════════════════════════════ */
 const EVENTS = [
@@ -1208,8 +1217,32 @@ function OverviewTab({ internal }: { internal: boolean }) {
 /* ═══════════════════════════════════════════════════════════
    INTERNAL-ONLY: ROI CALCULATOR
    ═══════════════════════════════════════════════════════════ */
-function ROICalculator() {
-  const [selected, setSelected] = useState<Set<string>>(new Set(EVENTS.filter(e => e.status !== "proposed").map(e => e.name)));
+function ROICalculator({ company }: { company: string }) {
+  const isAll = company === "All";
+  // In company mode: default-select that company's activated events from localStorage
+  const defaultSelected = useMemo(() => {
+    if (isAll) {
+      const union = new Set<string>();
+      COMPANIES.forEach(c => {
+        try {
+          const raw = localStorage.getItem(`sa-statuses-${c.name}`);
+          if (!raw) return;
+          const obj = JSON.parse(raw) as Record<string, string>;
+          Object.entries(obj).forEach(([name, st]) => { if (st === "activated") union.add(name); });
+        } catch {}
+      });
+      return union;
+    }
+    try {
+      const raw = localStorage.getItem(`sa-statuses-${company}`);
+      if (!raw) return new Set<string>();
+      const obj = JSON.parse(raw) as Record<string, string>;
+      return new Set(Object.entries(obj).filter(([, st]) => st === "activated" || st === "interested").map(([n]) => n));
+    } catch { return new Set<string>(); }
+  }, [company, isAll]);
+
+  const [selected, setSelected] = useState<Set<string>>(defaultSelected);
+  useEffect(() => { setSelected(defaultSelected); }, [defaultSelected]);
   const toggle = (name: string) => {
     const next = new Set(selected);
     next.has(name) ? next.delete(name) : next.add(name);
@@ -1223,17 +1256,20 @@ function ROICalculator() {
   const estDecisionMakers = count * 300;
   const estCountries = Math.min(count * 2 + 3, 14);
   const estFollowUps = Math.round(estDecisionMakers * 0.35);
+  const col = isAll ? C.amber : companyColor(company);
 
   return (
     <section id="roi" style={{ padding: "80px 32px", maxWidth: 1100, margin: "0 auto" }}>
       <FadeIn>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
           <SectionLabel>ROI Projections</SectionLabel>
-          <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          <span style={{ fontFamily: mn, fontSize: 9, color: col, background: col + "15", border: `1px solid ${col}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px", fontWeight: 700 }}>{company.toUpperCase()}</span>
         </div>
-        <SectionTitle>Sponsorship Impact Calculator</SectionTitle>
+        <SectionTitle>{isAll ? "Combined Impact Calculator" : `${company} Impact Calculator`}</SectionTitle>
         <p style={{ fontFamily: ft, fontSize: 17, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 32 }}>
-          Select events to model projected reach. These are estimates based on our 2025 actuals.
+          {isAll
+            ? "Model the combined reach of every event activated across all companies. Toggle events to adjust."
+            : `Model projected reach for ${company}. Defaults to events currently Interested or Activated for ${company}. Based on 2025 actuals.`}
         </p>
       </FadeIn>
 
@@ -1575,30 +1611,52 @@ const TABS_INTERNAL = [
 /* ═══════════════════════════════════════════════════════════
    INTERNAL: STATUS TOGGLE ADMIN
    ═══════════════════════════════════════════════════════════ */
-function StatusAdmin() {
-  const [statuses, setStatuses] = useState<Record<string, ActivationStatus>>(() => {
-    const saved: Record<string, ActivationStatus> = {};
-    EVENTS.forEach(e => { saved[e.name] = e.status; });
-    return saved;
+function StatusAdmin({ company }: { company: string }) {
+  const isAll = company === "All";
+  const storageKey = (c: string) => `sa-statuses-${c}`;
+
+  const loadCompany = (c: string): Record<string, ActivationStatus> => {
+    try {
+      const raw = localStorage.getItem(storageKey(c));
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    const defaults: Record<string, ActivationStatus> = {};
+    EVENTS.forEach(e => { defaults[e.name] = "proposed"; });
+    return defaults;
+  };
+
+  const [statuses, setStatuses] = useState<Record<string, Record<string, ActivationStatus>>>(() => {
+    const out: Record<string, Record<string, ActivationStatus>> = {};
+    COMPANIES.forEach(c => { out[c.name] = loadCompany(c.name); });
+    return out;
   });
   const [saved, setSaved] = useState(false);
 
   const cycle = (name: string) => {
+    if (isAll) return;
     const order: ActivationStatus[] = ["proposed", "interested", "activated"];
-    const cur = statuses[name];
+    const cur = statuses[company]?.[name] || "proposed";
     const next = order[(order.indexOf(cur) + 1) % order.length];
-    setStatuses({ ...statuses, [name]: next });
+    const updated = { ...statuses, [company]: { ...statuses[company], [name]: next } };
+    setStatuses(updated);
+    localStorage.setItem(storageKey(company), JSON.stringify(updated[company]));
     setSaved(false);
   };
 
+  // In All mode, show only events activated for ANY company
+  const visibleEvents = useMemo(() => {
+    if (!isAll) return EVENTS;
+    return EVENTS.filter(ev =>
+      COMPANIES.some(c => statuses[c.name]?.[ev.name] === "activated")
+    );
+  }, [isAll, statuses]);
+
   const handleSave = () => {
-    // Update the EVENTS array in memory (persists for session)
-    EVENTS.forEach(ev => {
-      if (statuses[ev.name]) (ev as any).status = statuses[ev.name];
-    });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
+
+  const col = isAll ? C.amber : companyColor(company);
 
   return (
     <section style={{ padding: "80px 32px" }}>
@@ -1606,63 +1664,82 @@ function StatusAdmin() {
         <FadeIn>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <SectionLabel>Event Status Manager</SectionLabel>
-            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+            <span style={{ fontFamily: mn, fontSize: 9, color: col, background: col + "15", border: `1px solid ${col}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px", fontWeight: 700 }}>{company.toUpperCase()}</span>
           </div>
-          <SectionTitle>Toggle Activation Status</SectionTitle>
-          <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 32 }}>
-            Click a status badge to cycle through: Proposed {"\u2192"} AWS Interested {"\u2192"} AWS Activated. Hit save to apply across the site for this session.
+          <SectionTitle>{isAll ? "Activated Events — All Companies" : `${company} Activation Status`}</SectionTitle>
+          <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 620, marginBottom: 32 }}>
+            {isAll
+              ? "Events shown below are activated for at least one company. Switch to a specific company above to manage its individual statuses."
+              : `Click a status badge to cycle: Proposed → ${company} Interested → ${company} Activated. Each company tracks its own statuses independently.`}
           </p>
         </FadeIn>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
-          {EVENTS.map(ev => {
-            const st = STATUS_CONFIG[statuses[ev.name]];
-            return (
-              <FadeIn key={ev.name}>
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 16, padding: "16px 20px",
-                  background: C.glass, backdropFilter: "blur(20px)",
-                  border: `1px solid ${C.glassBorder}`, borderRadius: 14,
-                }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.glassBorder}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
-                    <img src={ev.logo} alt={ev.name} style={{ width: 26, height: 26, objectFit: "contain", filter: ev.logo.endsWith(".svg") ? "brightness(0) invert(1)" : "none" }} />
+        {visibleEvents.length === 0 && isAll ? (
+          <GlassCard style={{ padding: "40px 24px", textAlign: "center" }}>
+            <div style={{ fontFamily: ft, fontSize: 15, color: C.txm }}>No events are activated yet for any company. Switch to a specific company above to set statuses.</div>
+          </GlassCard>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
+            {visibleEvents.map(ev => {
+              const cur = statuses[company]?.[ev.name] || "proposed";
+              const st = STATUS_CONFIG[cur];
+              return (
+                <FadeIn key={ev.name}>
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 16, padding: "16px 20px",
+                    background: C.glass, backdropFilter: "blur(20px)",
+                    border: `1px solid ${C.glassBorder}`, borderRadius: 14,
+                  }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.glassBorder}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+                      <img src={ev.logo} alt={ev.name} style={{ width: 26, height: 26, objectFit: "contain", filter: ev.logo.endsWith(".svg") ? "brightness(0) invert(1)" : "none" }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontFamily: ft, fontSize: 15, fontWeight: 700, color: C.tx }}>{ev.name}</div>
+                      <div style={{ fontFamily: mn, fontSize: 11, color: C.txd }}>{ev.dates} — {ev.location}</div>
+                    </div>
+                    {isAll ? (
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {COMPANIES.filter(c => statuses[c.name]?.[ev.name] === "activated").map(c => (
+                          <span key={c.name} style={{ fontFamily: mn, fontSize: 10, fontWeight: 700, color: c.color, background: c.color + "15", border: `1px solid ${c.color}30`, borderRadius: 20, padding: "4px 12px", letterSpacing: "1px" }}>{c.name}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => cycle(ev.name)}
+                        style={{
+                          fontFamily: mn, fontSize: 10, fontWeight: 700,
+                          color: st.color, background: st.bg,
+                          border: `1px solid ${st.color}30`,
+                          borderRadius: 20, padding: "6px 16px",
+                          cursor: "pointer", transition: "all 0.2s ease",
+                          display: "flex", alignItems: "center", gap: 6,
+                        }}
+                      >
+                        <span style={{ fontSize: 12 }}>{st.icon}</span> {st.label.replace("AWS", company)}
+                      </button>
+                    )}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: ft, fontSize: 15, fontWeight: 700, color: C.tx }}>{ev.name}</div>
-                    <div style={{ fontFamily: mn, fontSize: 11, color: C.txd }}>{ev.dates} — {ev.location}</div>
-                  </div>
-                  <button
-                    onClick={() => cycle(ev.name)}
-                    style={{
-                      fontFamily: mn, fontSize: 10, fontWeight: 700,
-                      color: st.color, background: st.bg,
-                      border: `1px solid ${st.color}30`,
-                      borderRadius: 20, padding: "6px 16px",
-                      cursor: "pointer", transition: "all 0.2s ease",
-                      display: "flex", alignItems: "center", gap: 6,
-                    }}
-                  >
-                    <span style={{ fontSize: 12 }}>{st.icon}</span> {st.label}
-                  </button>
-                </div>
-              </FadeIn>
-            );
-          })}
-        </div>
+                </FadeIn>
+              );
+            })}
+          </div>
+        )}
 
-        <button
-          onClick={handleSave}
-          style={{
-            fontFamily: ft, fontSize: 14, fontWeight: 800,
-            color: saved ? "#060608" : "#fff",
-            background: saved ? "linear-gradient(135deg, #4ADE80, #22C55E)" : `linear-gradient(135deg, ${C.amber}, #E8A020)`,
-            padding: "14px 40px", borderRadius: 12, border: "none", cursor: "pointer",
-            boxShadow: saved ? "0 4px 20px rgba(74,222,128,0.3)" : `0 4px 20px ${C.amber}30`,
-            transition: "all 0.3s ease",
-          }}
-        >
-          {saved ? "Saved — statuses updated across the site" : "Save Changes"}
-        </button>
+        {!isAll && (
+          <button
+            onClick={handleSave}
+            style={{
+              fontFamily: ft, fontSize: 14, fontWeight: 800,
+              color: saved ? "#060608" : "#fff",
+              background: saved ? "linear-gradient(135deg, #4ADE80, #22C55E)" : `linear-gradient(135deg, ${col}, ${col}cc)`,
+              padding: "14px 40px", borderRadius: 12, border: "none", cursor: "pointer",
+              boxShadow: saved ? "0 4px 20px rgba(74,222,128,0.3)" : `0 4px 20px ${col}30`,
+              transition: "all 0.3s ease",
+            }}
+          >
+            {saved ? `Saved — ${company} statuses updated` : "Save Changes"}
+          </button>
+        )}
       </div>
     </section>
   );
@@ -2584,15 +2661,195 @@ function ContentCalendar() {
   );
 }
 
+function CompanySelector({ company, setCompany }: { company: string; setCompany: (c: string) => void }) {
+  const options = ["All", ...COMPANIES.map(c => c.name)];
+  return (
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 32px 0", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+      <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "2px", textTransform: "uppercase" }}>Viewing</div>
+      <div style={{ display: "inline-flex", gap: 4, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 3 }}>
+        {options.map(o => {
+          const active = company === o;
+          const col = o === "All" ? C.amber : companyColor(o);
+          return (
+            <button key={o} onClick={() => setCompany(o)} style={{
+              fontFamily: ft, fontSize: 12, fontWeight: active ? 800 : 600,
+              color: active ? "#060608" : C.txm,
+              background: active ? `linear-gradient(135deg, ${col}, ${col}cc)` : "transparent",
+              border: "none", borderRadius: 9, padding: "8px 20px",
+              cursor: "pointer", transition: "all 0.2s ease",
+            }}>{o}</button>
+          );
+        })}
+      </div>
+      <div style={{ fontFamily: mn, fontSize: 10, color: C.txm }}>
+        {company === "All"
+          ? "Showing activated events + combined metrics across all companies."
+          : `Showing ${company} activation status, impact, and engagement.`}
+      </div>
+    </div>
+  );
+}
+
+function EngagementFunnel({ company }: { company: string }) {
+  const [tracks, setTracks] = useState<any[]>([]);
+  const [subs, setSubs] = useState<any[]>([]);
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/track").then(r => r.json()).catch(() => []),
+      fetch("/api/interest").then(r => r.json()).catch(() => []),
+    ]).then(([t, s]) => { setTracks(Array.isArray(t) ? t : []); setSubs(Array.isArray(s) ? s : []); });
+  }, []);
+
+  const relevant = (items: any[]) => company === "All" ? items : items.filter(i => (i.partner || "Unknown") === company);
+  const filteredTracks = relevant(tracks);
+  const filteredSubs = relevant(subs);
+
+  const visits = filteredTracks.filter(t => t.event === "page_open").length;
+  const ctaClicks = filteredTracks.filter(t => t.event === "cta_click").length;
+  const planApplied = filteredTracks.filter(t => t.event === "plan_applied").length;
+  const submits = filteredSubs.length;
+
+  const steps = [
+    { label: "Visits", value: visits, color: C.blue },
+    { label: "CTA Clicks", value: ctaClicks, color: C.amber },
+    { label: "Plans Applied", value: planApplied, color: C.violet },
+    { label: "Submissions", value: submits, color: "#4ADE80" },
+  ];
+  const maxVal = Math.max(1, ...steps.map(s => s.value));
+
+  return (
+    <section style={{ padding: "40px 32px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <SectionLabel>Engagement Funnel</SectionLabel>
+            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          </div>
+          <SectionTitle>Prospect Journey {company !== "All" ? `— ${company}` : ""}</SectionTitle>
+        </FadeIn>
+
+        <div data-grid-responsive style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 20 }}>
+          {steps.map((s, i) => {
+            const pct = (s.value / maxVal) * 100;
+            const dropFromPrev = i > 0 && steps[i-1].value > 0 ? Math.round(((steps[i-1].value - s.value) / steps[i-1].value) * 100) : 0;
+            return (
+              <GlassCard key={s.label} style={{ padding: "22px 22px", borderLeft: `3px solid ${s.color}` }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>{s.label}</div>
+                <div style={{ fontFamily: gf, fontSize: 36, fontWeight: 900, color: s.color, lineHeight: 1, letterSpacing: "-1.5px" }}>{s.value}</div>
+                <div style={{ marginTop: 10, height: 4, background: "rgba(255,255,255,0.04)", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{ width: `${pct}%`, height: "100%", background: s.color, transition: "width 0.4s ease" }} />
+                </div>
+                {i > 0 && steps[i-1].value > 0 && (
+                  <div style={{ fontFamily: mn, fontSize: 10, color: dropFromPrev > 50 ? C.coral : C.txm, marginTop: 8 }}>
+                    {dropFromPrev > 0 ? `-${dropFromPrev}% drop` : "no drop"}
+                  </div>
+                )}
+              </GlassCard>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RecentActivity({ company }: { company: string }) {
+  const [tracks, setTracks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    fetch("/api/track").then(r => r.json()).then(d => {
+      setTracks(Array.isArray(d) ? d : []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  const filtered = company === "All" ? tracks : tracks.filter(t => (t.partner || "Unknown") === company);
+  const sorted = [...filtered].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()).slice(0, 40);
+
+  const eventColor = (ev: string) => {
+    const map: Record<string, string> = {
+      page_open: C.blue,
+      cta_click: C.amber,
+      plan_applied: C.violet,
+      form_submit: "#4ADE80",
+    };
+    return map[ev] || C.txm;
+  };
+
+  const eventLabel = (ev: string) => {
+    const map: Record<string, string> = {
+      page_open: "Visited",
+      cta_click: "Clicked CTA",
+      plan_applied: "Built a plan",
+      form_submit: "Submitted form",
+    };
+    return map[ev] || ev;
+  };
+
+  const timeAgo = (iso: string) => {
+    const diff = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return "just now";
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    return `${d}d ago`;
+  };
+
+  return (
+    <section style={{ padding: "40px 32px", background: "rgba(255,255,255,0.01)" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <SectionLabel>Recent Activity</SectionLabel>
+            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          </div>
+          <SectionTitle>Live Feed {company !== "All" ? `— ${company}` : ""}</SectionTitle>
+        </FadeIn>
+
+        {loading ? (
+          <div style={{ fontFamily: mn, fontSize: 13, color: C.txd, padding: "40px 0" }}>Loading activity...</div>
+        ) : sorted.length === 0 ? (
+          <GlassCard style={{ padding: "30px 24px", textAlign: "center", marginTop: 16 }}>
+            <div style={{ fontFamily: ft, fontSize: 14, color: C.txm }}>No activity yet{company !== "All" ? ` for ${company}` : ""}.</div>
+          </GlassCard>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 20 }}>
+            {sorted.map((t, i) => {
+              const col = eventColor(t.event);
+              const pcol = companyColor(t.partner || "Unknown");
+              return (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: col, flexShrink: 0 }} />
+                  <span style={{ fontFamily: mn, fontSize: 10, color: pcol, background: pcol + "12", border: `1px solid ${pcol}30`, borderRadius: 8, padding: "2px 8px", letterSpacing: "1px", fontWeight: 700, flexShrink: 0 }}>{t.partner || "Unknown"}</span>
+                  <span style={{ fontFamily: ft, fontSize: 13, color: C.tx, flex: 1 }}>{eventLabel(t.event)}</span>
+                  {t.metadata?.path && <span style={{ fontFamily: mn, fontSize: 10, color: C.txd }}>{t.metadata.path}</span>}
+                  {t.metadata?.budget && <span style={{ fontFamily: mn, fontSize: 10, color: C.txd }}>${t.metadata.budget}K</span>}
+                  <span style={{ fontFamily: mn, fontSize: 10, color: C.txd, flexShrink: 0 }}>{timeAgo(t.at)}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function InternalAnalyticsTab() {
+  const [company, setCompany] = useState<string>("All");
   return (
     <div style={{ background: C.bg, minHeight: "100vh", position: "relative" }}>
       <GradientMesh />
       <div style={{ position: "relative", zIndex: 1, paddingTop: 80 }}>
-        <StatusAdmin />
-        <ROICalculator />
-        <MichelleToolkit />
+        <CompanySelector company={company} setCompany={setCompany} />
         <SubmissionsViewer />
+        <EngagementFunnel company={company} />
+        <RecentActivity company={company} />
+        <StatusAdmin company={company} />
+        <ROICalculator company={company} />
+        <MichelleToolkit />
         <MakeMichelleHappy />
       </div>
     </div>
