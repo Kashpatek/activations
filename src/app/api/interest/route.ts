@@ -1,4 +1,4 @@
-import { listAppend, listAll, STORAGE_BACKEND } from "@/lib/storage";
+import { listAppend, listAll, STORAGE_BACKEND, storageDiagnostic } from "@/lib/storage";
 
 type Submission = {
   name: string;
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
     await listAppend("submissions", sub);
 
-    return Response.json({ ok: true, backend: STORAGE_BACKEND });
+    return Response.json({ ok: true, backend: STORAGE_BACKEND, diag: storageDiagnostic });
   } catch (e) {
     return Response.json({ error: "Failed to save", detail: String(e) }, { status: 500 });
   }
