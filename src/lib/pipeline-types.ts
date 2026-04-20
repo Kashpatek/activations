@@ -27,11 +27,36 @@ export type PipelineBudget = {
   paid: number;      // actually received ($K)
 };
 
+export type SubSponsor = {
+  id: string;
+  name: string;       // sponsor org name
+  contact?: string;   // person + title
+  tier?: string;      // "Silver", "Bronze", "Community", or free text
+  amount: number;     // $K contribution
+  status?: "proposed" | "confirmed" | "paid";
+  note?: string;
+  addedAt: string;
+};
+
 export type PipelineEntry = {
   status: PipelineStatus;
   budget: PipelineBudget;
   notes?: string;
   lastUpdated: string;
+};
+
+export type Submission = {
+  id: string;
+  name: string;
+  email: string;
+  role?: string;
+  events?: string[];
+  notes?: string;
+  partner: string;
+  host: string;
+  submittedAt: string;
+  internalNotes?: string;
+  followUpStatus?: "none" | "scheduled" | "contacted" | "closed";
 };
 
 export type CompanyPipeline = Record<string /*eventName*/, PipelineEntry>;

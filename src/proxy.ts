@@ -50,9 +50,25 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Protect /api/event-sponsors entirely — internal-only
+  if (pathname === "/api/event-sponsors") {
+    const token = request.cookies.get("sa-auth")?.value;
+    if (!token || !(await verifyToken(token))) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
+  // Protect /api/interest DELETE and PATCH (only POST is public)
+  if (pathname === "/api/interest" && (request.method === "DELETE" || request.method === "PATCH")) {
+    const token = request.cookies.get("sa-auth")?.value;
+    if (!token || !(await verifyToken(token))) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/internal/:path*", "/api/interest", "/api/track", "/api/pipeline"],
+  matcher: ["/internal/:path*", "/api/interest", "/api/track", "/api/pipeline", "/api/event-sponsors"],
 };

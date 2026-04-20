@@ -1944,6 +1944,130 @@ function TemplateCard({ template, copied, onCopy }: { template: { key: string; t
 /* ═══════════════════════════════════════════════════════════
    INTERNAL: SUBMISSIONS VIEWER
    ═══════════════════════════════════════════════════════════ */
+function SubmissionRow({ sub, color, onUpdated, onDeleted }: { sub: any; color: string; onUpdated: (s: any) => void; onDeleted: (id: string) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const [localNotes, setLocalNotes] = useState(sub.internalNotes || "");
+  const [status, setStatus] = useState(sub.followUpStatus || "none");
+  const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  useEffect(() => {
+    setLocalNotes(sub.internalNotes || "");
+    setStatus(sub.followUpStatus || "none");
+  }, [sub.internalNotes, sub.followUpStatus]);
+
+  const save = async (patch: any) => {
+    if (!sub.id) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/interest", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: sub.id, patch }),
+      });
+      const d = await res.json();
+      if (d.submission) onUpdated(d.submission);
+    } finally { setSaving(false); }
+  };
+
+  const doDelete = async () => {
+    if (!sub.id) return;
+    await fetch(`/api/interest?id=${sub.id}`, { method: "DELETE" });
+    onDeleted(sub.id);
+  };
+
+  const statusColors: Record<string, string> = {
+    none: C.txd, scheduled: C.blue, contacted: C.amber, closed: "#4ADE80",
+  };
+  const statusLabels: Record<string, string> = {
+    none: "No follow-up", scheduled: "Scheduled", contacted: "Contacted", closed: "Closed",
+  };
+
+  return (
+    <FadeIn>
+      <GlassCard style={{ padding: 0, borderLeft: `3px solid ${color}`, overflow: "hidden" }}>
+        <div style={{ padding: "20px 24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2, flexWrap: "wrap" }}>
+                <span style={{ fontFamily: ft, fontSize: 16, fontWeight: 700, color: C.tx }}>{sub.name}</span>
+                <span style={{ fontFamily: mn, fontSize: 9, color, background: color + "15", border: `1px solid ${color}30`, borderRadius: 20, padding: "2px 10px", letterSpacing: "1px", fontWeight: 700 }}>{sub.partner || "Unknown"}</span>
+                <span style={{ fontFamily: mn, fontSize: 9, color: statusColors[status] || C.txd, background: (statusColors[status] || C.txd) + "15", border: `1px solid ${(statusColors[status] || C.txd)}30`, borderRadius: 20, padding: "2px 10px", letterSpacing: "1px", fontWeight: 700 }}>{statusLabels[status] || status}</span>
+              </div>
+              <div style={{ fontFamily: mn, fontSize: 12, color: C.amber }}>{sub.email}</div>
+              {sub.role && <div style={{ fontFamily: ft, fontSize: 13, color: C.txm, marginTop: 2 }}>{sub.role}</div>}
+            </div>
+            <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, textAlign: "right" }}>
+              {sub.submittedAt ? new Date(sub.submittedAt).toLocaleString() : ""}
+            </div>
+          </div>
+
+          {sub.events?.length > 0 && (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
+              {sub.events.map((e: string) => (
+                <span key={e} style={{ fontFamily: mn, fontSize: 10, color: C.amber, background: C.amber + "10", border: `1px solid ${C.amber}25`, borderRadius: 8, padding: "3px 10px" }}>{e}</span>
+              ))}
+            </div>
+          )}
+
+          {sub.notes && <div style={{ fontFamily: ft, fontSize: 13, color: C.txm, marginTop: 10, lineHeight: 1.5, fontStyle: "italic" }}>"{sub.notes}"</div>}
+
+          <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+            <button onClick={() => setExpanded(!expanded)} style={{ fontFamily: mn, fontSize: 10, color: C.txm, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>
+              {expanded ? "Close" : (sub.internalNotes ? "Notes + Follow-up" : "Add Notes")}
+            </button>
+            {sub.internalNotes && <span style={{ fontFamily: mn, fontSize: 10, color: C.amber, alignSelf: "center" }}>has notes</span>}
+            <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+              {!confirmDelete ? (
+                <button onClick={() => setConfirmDelete(true)} style={{ fontFamily: mn, fontSize: 10, color: C.coral, background: C.coral + "10", border: `1px solid ${C.coral}30`, borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>Delete</button>
+              ) : (
+                <>
+                  <span style={{ fontFamily: mn, fontSize: 10, color: C.txd, alignSelf: "center" }}>Sure?</span>
+                  <button onClick={doDelete} style={{ fontFamily: mn, fontSize: 10, color: "#fff", background: C.coral, border: `1px solid ${C.coral}`, borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 700 }}>Yes delete</button>
+                  <button onClick={() => setConfirmDelete(false)} style={{ fontFamily: mn, fontSize: 10, color: C.txm, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>Cancel</button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {expanded && (
+          <div style={{ padding: "16px 24px 18px", borderTop: `1px solid ${C.glassBorder}`, background: "rgba(0,0,0,0.18)" }}>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
+              <div style={{ flex: 2, minWidth: 260 }}>
+                <div style={{ fontFamily: mn, fontSize: 9, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>Internal notes</div>
+                <textarea
+                  value={localNotes}
+                  onChange={(e) => setLocalNotes(e.target.value)}
+                  onBlur={() => { if (localNotes !== (sub.internalNotes || "")) save({ internalNotes: localNotes }); }}
+                  rows={3}
+                  placeholder="Michelle's notes, next steps, context..."
+                  style={{ width: "100%", padding: "8px 12px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, color: C.tx, fontFamily: ft, fontSize: 13, outline: "none", boxSizing: "border-box", resize: "vertical" }}
+                />
+              </div>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <div style={{ fontFamily: mn, fontSize: 9, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>Follow-up</div>
+                <select
+                  value={status}
+                  onChange={(e) => { setStatus(e.target.value); save({ followUpStatus: e.target.value }); }}
+                  style={{ width: "100%", padding: "8px 12px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, color: C.tx, fontFamily: mn, fontSize: 12, outline: "none", boxSizing: "border-box" }}
+                >
+                  {Object.entries(statusLabels).map(([k, v]) => (
+                    <option key={k} value={k} style={{ background: C.bg }}>{v}</option>
+                  ))}
+                </select>
+                <div style={{ fontFamily: mn, fontSize: 10, color: saving ? C.amber : C.txd, marginTop: 10 }}>
+                  {saving ? "Saving…" : "Autosaves on change"}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </GlassCard>
+    </FadeIn>
+  );
+}
+
 function SubmissionsViewer() {
   const [subs, setSubs] = useState<any[]>([]);
   const [tracks, setTracks] = useState<any[]>([]);
@@ -2050,37 +2174,15 @@ function SubmissionsViewer() {
           </GlassCard>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {filtered.map((s, i) => {
-              const pname = s.partner || "Unknown";
-              const col = partnerColor(pname);
-              return (
-                <FadeIn key={i}>
-                  <GlassCard style={{ padding: "20px 24px", borderLeft: `3px solid ${col}` }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, gap: 12, flexWrap: "wrap" }}>
-                      <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-                          <span style={{ fontFamily: ft, fontSize: 16, fontWeight: 700, color: C.tx }}>{s.name}</span>
-                          <span style={{ fontFamily: mn, fontSize: 9, color: col, background: col + "15", border: `1px solid ${col}30`, borderRadius: 20, padding: "2px 10px", letterSpacing: "1px", fontWeight: 700 }}>{pname}</span>
-                        </div>
-                        <div style={{ fontFamily: mn, fontSize: 12, color: C.amber }}>{s.email}</div>
-                        {s.role && <div style={{ fontFamily: ft, fontSize: 13, color: C.txm, marginTop: 2 }}>{s.role}</div>}
-                      </div>
-                      <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, textAlign: "right" }}>
-                        {s.submittedAt ? new Date(s.submittedAt).toLocaleString() : ""}
-                      </div>
-                    </div>
-                    {s.events?.length > 0 && (
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
-                        {s.events.map((e: string) => (
-                          <span key={e} style={{ fontFamily: mn, fontSize: 10, color: C.amber, background: C.amber + "10", border: `1px solid ${C.amber}25`, borderRadius: 8, padding: "3px 10px" }}>{e}</span>
-                        ))}
-                      </div>
-                    )}
-                    {s.notes && <div style={{ fontFamily: ft, fontSize: 13, color: C.txm, marginTop: 10, lineHeight: 1.5, fontStyle: "italic" }}>"{s.notes}"</div>}
-                  </GlassCard>
-                </FadeIn>
-              );
-            })}
+            {filtered.map((s) => (
+              <SubmissionRow
+                key={s.id || `${s.email}-${s.submittedAt}`}
+                sub={s}
+                color={partnerColor(s.partner || "Unknown")}
+                onUpdated={(updated) => setSubs(prev => prev.map(p => p.id === updated.id ? updated : p))}
+                onDeleted={(id) => setSubs(prev => prev.filter(p => p.id !== id))}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -2842,15 +2944,20 @@ function PipelineTab() {
   const [company, setCompany] = useState<string>(COMPANIES[0].name);
   const [view, setView] = useState<"to-activate" | "activated">("to-activate");
   const [pipelines, setPipelines] = useState<Record<string, CompanyPipeline>>({});
+  const [submissions, setSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
-    fetch("/api/pipeline")
-      .then(r => r.json())
-      .then(d => { setPipelines(d.pipelines || {}); setLoading(false); })
-      .catch(() => setLoading(false));
+    Promise.all([
+      fetch("/api/pipeline").then(r => r.json()).catch(() => ({ pipelines: {} })),
+      fetch("/api/interest").then(r => r.json()).catch(() => []),
+    ]).then(([p, s]) => {
+      setPipelines(p.pipelines || {});
+      setSubmissions(Array.isArray(s) ? s : []);
+      setLoading(false);
+    });
   };
   useEffect(load, []);
 
@@ -2976,6 +3083,10 @@ function PipelineTab() {
                 const entry = entryFor(ev.name);
                 const stage = PIPELINE_STAGES.find(s => s.key === entry.status)!;
                 const savingThis = savingKey === `${company}:${ev.name}`;
+                const linked = submissions.filter(s =>
+                  (s.partner || "").toLowerCase() === company.toLowerCase() &&
+                  (s.events || []).includes(ev.name)
+                );
                 return (
                   <PipelineRow
                     key={ev.name}
@@ -2984,6 +3095,8 @@ function PipelineTab() {
                     stage={stage}
                     saving={savingThis}
                     onChange={(patch) => patchEntry(ev.name, patch)}
+                    submissions={linked}
+                    company={company}
                   />
                 );
               })}
@@ -2995,12 +3108,14 @@ function PipelineTab() {
   );
 }
 
-function PipelineRow({ ev, entry, stage, saving, onChange }: {
+function PipelineRow({ ev, entry, stage, saving, onChange, submissions, company }: {
   ev: any;
   entry: PipelineEntry;
   stage: { key: PipelineStatus; label: string; short: string; color: string; description: string };
   saving: boolean;
   onChange: (patch: Partial<PipelineEntry>) => void;
+  submissions: any[];
+  company: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [localBudget, setLocalBudget] = useState(entry.budget);
@@ -3043,6 +3158,12 @@ function PipelineRow({ ev, entry, stage, saving, onChange }: {
             <option key={s.key} value={s.key} style={{ background: C.bg, color: C.tx }}>{s.label}</option>
           ))}
         </select>
+
+        {submissions.length > 0 && (
+          <span style={{ fontFamily: mn, fontSize: 10, fontWeight: 700, color: C.blue, background: C.blue + "15", border: `1px solid ${C.blue}30`, borderRadius: 20, padding: "4px 10px", letterSpacing: "1px" }}>
+            {submissions.length} INQUIRY{submissions.length > 1 ? "S" : ""}
+          </span>
+        )}
 
         {/* Quick budget readout */}
         <div style={{ fontFamily: mn, fontSize: 11, color: C.txd, minWidth: 120, textAlign: "right" }}>
@@ -3099,13 +3220,157 @@ function PipelineRow({ ev, entry, stage, saving, onChange }: {
             }}
           />
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12, gap: 10, flexWrap: "wrap" }}>
+          {/* Linked submissions — the inquiries that triggered this pipeline entry */}
+          {submissions.length > 0 && (
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.glassBorder}` }}>
+              <div style={{ fontFamily: mn, fontSize: 9, color: C.blue, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 10, fontWeight: 700 }}>
+                Linked inquiries ({submissions.length})
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {submissions.map((s) => (
+                  <div key={s.id || s.submittedAt} style={{ padding: "12px 14px", background: C.blue + "08", border: `1px solid ${C.blue}25`, borderRadius: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontFamily: ft, fontSize: 14, fontWeight: 700, color: C.tx }}>{s.name}</span>
+                          {s.role && <span style={{ fontFamily: ft, fontSize: 12, color: C.txm }}>— {s.role}</span>}
+                        </div>
+                        <div style={{ fontFamily: mn, fontSize: 11, color: C.amber, marginTop: 2 }}>{s.email}</div>
+                      </div>
+                      <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, textAlign: "right" }}>
+                        {new Date(s.submittedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    {s.notes && <div style={{ fontFamily: ft, fontSize: 12, color: C.txm, marginTop: 8, fontStyle: "italic", lineHeight: 1.5 }}>"{s.notes}"</div>}
+                    {s.internalNotes && (
+                      <div style={{ marginTop: 8, padding: "8px 10px", background: C.amber + "08", border: `1px solid ${C.amber}25`, borderRadius: 6 }}>
+                        <div style={{ fontFamily: mn, fontSize: 9, color: C.amber, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 4, fontWeight: 700 }}>Michelle's note</div>
+                        <div style={{ fontFamily: ft, fontSize: 12, color: C.tx, lineHeight: 1.5 }}>{s.internalNotes}</div>
+                      </div>
+                    )}
+                    {s.events?.length > 1 && (
+                      <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, marginTop: 8 }}>
+                        Also interested in: {s.events.filter((e: string) => e !== ev.name).join(", ")}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Sub-sponsors for this event */}
+          <SubSponsorsEditor eventName={ev.name} />
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, gap: 10, flexWrap: "wrap" }}>
             <div style={{ fontFamily: mn, fontSize: 10, color: C.txd }}>
               {stage.description} {saving && <span style={{ color: C.amber, marginLeft: 8 }}>Saving…</span>}
             </div>
             <div style={{ fontFamily: mn, fontSize: 10, color: C.txd }}>
               Last updated: {new Date(entry.lastUpdated).toLocaleString()}
             </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SubSponsorsEditor({ eventName }: { eventName: string }) {
+  const [sponsors, setSponsors] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState({ name: "", contact: "", tier: "Community", amount: 0, status: "proposed", note: "" });
+
+  const load = async () => {
+    try {
+      const res = await fetch(`/api/event-sponsors?event=${encodeURIComponent(eventName)}`);
+      const d = await res.json();
+      setSponsors(d.sponsors || []);
+    } finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, [eventName]);
+
+  const add = async () => {
+    if (!draft.name.trim()) return;
+    const res = await fetch("/api/event-sponsors", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: eventName, sponsor: draft }),
+    });
+    const d = await res.json();
+    if (d.sponsor) setSponsors(prev => [...prev, d.sponsor]);
+    setDraft({ name: "", contact: "", tier: "Community", amount: 0, status: "proposed", note: "" });
+    setAdding(false);
+  };
+
+  const patch = async (id: string, p: any) => {
+    const res = await fetch("/api/event-sponsors", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: eventName, id, patch: p }),
+    });
+    const d = await res.json();
+    if (d.sponsor) setSponsors(prev => prev.map(s => s.id === id ? d.sponsor : s));
+  };
+
+  const remove = async (id: string) => {
+    await fetch(`/api/event-sponsors?event=${encodeURIComponent(eventName)}&id=${id}`, { method: "DELETE" });
+    setSponsors(prev => prev.filter(s => s.id !== id));
+  };
+
+  const sponsorStatusColor = (s: string) => s === "paid" ? "#4ADE80" : s === "confirmed" ? C.amber : C.txm;
+  const totalAmount = sponsors.reduce((sum, s) => sum + (s.amount || 0), 0);
+
+  return (
+    <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.glassBorder}` }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <div style={{ fontFamily: mn, fontSize: 9, color: C.violet, letterSpacing: "1.5px", textTransform: "uppercase", fontWeight: 700 }}>
+          Sub-sponsors for {eventName} {sponsors.length > 0 && `(${sponsors.length}, +$${totalAmount}K)`}
+        </div>
+        {!adding && (
+          <button onClick={() => setAdding(true)} style={{ fontFamily: mn, fontSize: 10, color: C.violet, background: C.violet + "10", border: `1px solid ${C.violet}30`, borderRadius: 8, padding: "4px 12px", cursor: "pointer", fontWeight: 700 }}>
+            + Add
+          </button>
+        )}
+      </div>
+
+      {loading ? (
+        <div style={{ fontFamily: mn, fontSize: 11, color: C.txd }}>Loading...</div>
+      ) : sponsors.length === 0 && !adding ? (
+        <div style={{ fontFamily: ft, fontSize: 12, color: C.txd, fontStyle: "italic" }}>None yet. Click Add to track smaller sponsors for this event.</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {sponsors.map(s => (
+            <div key={s.id} style={{ padding: "10px 12px", background: "rgba(255,255,255,0.02)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <span style={{ fontFamily: ft, fontSize: 13, fontWeight: 700, color: C.tx, minWidth: 100 }}>{s.name}</span>
+              {s.tier && <span style={{ fontFamily: mn, fontSize: 10, color: C.violet, background: C.violet + "12", border: `1px solid ${C.violet}30`, borderRadius: 8, padding: "2px 8px", letterSpacing: "1px" }}>{s.tier}</span>}
+              <span style={{ fontFamily: mn, fontSize: 12, color: C.tx, fontWeight: 700 }}>${s.amount}K</span>
+              <select value={s.status || "proposed"} onChange={(e) => patch(s.id, { status: e.target.value })} style={{ fontFamily: mn, fontSize: 10, fontWeight: 700, color: sponsorStatusColor(s.status), background: sponsorStatusColor(s.status) + "15", border: `1px solid ${sponsorStatusColor(s.status)}30`, borderRadius: 8, padding: "3px 8px", cursor: "pointer", outline: "none" }}>
+                <option value="proposed" style={{ background: C.bg }}>Proposed</option>
+                <option value="confirmed" style={{ background: C.bg }}>Confirmed</option>
+                <option value="paid" style={{ background: C.bg }}>Paid</option>
+              </select>
+              {s.contact && <span style={{ fontFamily: ft, fontSize: 11, color: C.txm }}>{s.contact}</span>}
+              {s.note && <span style={{ fontFamily: ft, fontSize: 11, color: C.txd, fontStyle: "italic" }}>{s.note}</span>}
+              <button onClick={() => remove(s.id)} style={{ marginLeft: "auto", fontFamily: mn, fontSize: 10, color: C.coral, background: "none", border: "none", cursor: "pointer" }}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {adding && (
+        <div style={{ marginTop: 10, padding: "12px 14px", background: C.violet + "06", border: `1px solid ${C.violet}30`, borderRadius: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1.5fr 1fr 0.8fr", gap: 8, marginBottom: 8 }}>
+            <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="Sponsor name *" style={{ padding: "8px 10px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 6, color: C.tx, fontFamily: ft, fontSize: 12, outline: "none" }} />
+            <input value={draft.contact} onChange={(e) => setDraft({ ...draft, contact: e.target.value })} placeholder="Contact (name, title)" style={{ padding: "8px 10px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 6, color: C.tx, fontFamily: ft, fontSize: 12, outline: "none" }} />
+            <input value={draft.tier} onChange={(e) => setDraft({ ...draft, tier: e.target.value })} placeholder="Tier" style={{ padding: "8px 10px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 6, color: C.tx, fontFamily: mn, fontSize: 12, outline: "none" }} />
+            <input type="number" value={draft.amount} onChange={(e) => setDraft({ ...draft, amount: Number(e.target.value) || 0 })} placeholder="$K" style={{ padding: "8px 10px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 6, color: C.tx, fontFamily: mn, fontSize: 12, outline: "none" }} />
+          </div>
+          <input value={draft.note} onChange={(e) => setDraft({ ...draft, note: e.target.value })} placeholder="Note (optional)" style={{ width: "100%", padding: "8px 10px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 6, color: C.tx, fontFamily: ft, fontSize: 12, outline: "none", boxSizing: "border-box", marginBottom: 8 }} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={add} style={{ fontFamily: ft, fontSize: 12, fontWeight: 800, color: "#fff", background: `linear-gradient(135deg, ${C.violet}, ${C.violet}cc)`, padding: "8px 18px", borderRadius: 8, border: "none", cursor: "pointer" }}>Add sponsor</button>
+            <button onClick={() => { setAdding(false); setDraft({ name: "", contact: "", tier: "Community", amount: 0, status: "proposed", note: "" }); }} style={{ fontFamily: ft, fontSize: 12, color: C.txm, background: "transparent", border: `1px solid ${C.glassBorder}`, padding: "8px 18px", borderRadius: 8, cursor: "pointer" }}>Cancel</button>
           </div>
         </div>
       )}
