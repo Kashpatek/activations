@@ -102,6 +102,26 @@ function AudienceBar({ label, pct, color, delay }: { label: string; pct: number;
   );
 }
 
+function LogoWithFallback({ src, name, height, invert }: { src: string; name: string; height: number; invert?: boolean }) {
+  const [failed, setFailed] = useState(false);
+  if (failed || !src) {
+    return (
+      <span style={{
+        fontFamily: gf, fontSize: height * 0.7, fontWeight: 800,
+        color: invert ? "#fff" : C.tx, letterSpacing: "-0.5px",
+      }}>{name}</span>
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={name}
+      onError={() => setFailed(true)}
+      style={{ height, objectFit: "contain", filter: invert ? "brightness(0) invert(1)" : undefined }}
+    />
+  );
+}
+
 function GlassCard({ children, style, hover }: { children: React.ReactNode; style?: React.CSSProperties; hover?: boolean }) {
   const [h, setH] = useState(false);
   return (
@@ -1068,7 +1088,7 @@ function BudgetStrategizer() {
               <div style={{ padding: "18px 20px", background: "rgba(255,255,255,0.02)", borderRadius: 12, border: `1px solid ${C.glassBorder}` }}>
                 <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>Cost per Decision-Maker</div>
                 <div style={{ fontFamily: gf, fontSize: 32, fontWeight: 900, color: C.teal, lineHeight: 1 }}>${costPerDecisionMaker}</div>
-                <div style={{ fontFamily: ft, fontSize: 12, color: C.txm, marginTop: 4 }}>vs. $150\u2013300 at trade shows</div>
+                <div style={{ fontFamily: ft, fontSize: 12, color: C.txm, marginTop: 4 }}>vs. $150–300 at trade shows</div>
               </div>
             </div>
 
@@ -1224,7 +1244,7 @@ function ClosingPitch() {
               30 minutes this week. A decision by end of Q1.
             </div>
             <div style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, marginBottom: 24, maxWidth: 680 }}>
-              We'll walk through the calendar, pick the 2\u20133 events that best match your GTM priorities, and sketch a tier together. You don't need a budget number today \u2014 you need to see which rooms {partner.name} should own in 2026. We'll do the math from there.
+              We'll walk through the calendar, pick the 2–3 events that best match your GTM priorities, and sketch a tier together. You don't need a budget number today — you need to see which rooms {partner.name} should own in 2026. We'll do the math from there.
             </div>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <a href="#cta" onClick={(e) => { e.preventDefault(); document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" }); }} style={{
@@ -1250,7 +1270,7 @@ function ClosingPitch() {
    INTEREST FORM
    ═══════════════════════════════════════════════════════════ */
 function InterestForm() {
-  const { events: EVENTS } = useSiteConfig();
+  const { events: EVENTS, partner } = useSiteConfig();
   const [form, setForm] = useState({ name: "", email: "", role: "", events: new Set<string>(), notes: "" });
   const [submitted, setSubmitted] = useState(false);
   const toggleEvent = (name: string) => { const next = new Set(form.events); next.has(name) ? next.delete(name) : next.add(name); setForm({ ...form, events: next }); };
@@ -1297,7 +1317,7 @@ function InterestForm() {
             </div>
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>Role / Title</div>
-              <input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} placeholder="e.g. Head of Marketing, AWS"
+              <input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} placeholder={`e.g. Head of Marketing, ${partner.name}`}
                 style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 10, color: C.tx, fontFamily: ft, fontSize: 14, outline: "none", boxSizing: "border-box" }}
                 onFocus={e => { e.target.style.borderColor = C.amber; }} onBlur={e => { e.target.style.borderColor = C.glassBorder; }} />
             </div>
@@ -1393,9 +1413,9 @@ function EventsClientInner() {
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <img src={host.logo} alt={host.name} style={{ height: 22, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
+          <LogoWithFallback src={host.logo} name={host.name} height={22} invert />
           <span style={{ color: C.txd, fontSize: 20, fontWeight: 200 }}>{"\u00D7"}</span>
-          <img src={partner.logo} alt={partner.name} style={{ height: 18, objectFit: "contain" }} />
+          <LogoWithFallback src={partner.logo} name={partner.name} height={20} />
         </div>
 
         <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 3 }}>
