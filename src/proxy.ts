@@ -66,9 +66,17 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Protect /api/admin/* entirely
+  if (pathname.startsWith("/api/admin")) {
+    const token = request.cookies.get("sa-auth")?.value;
+    if (!token || !(await verifyToken(token))) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/internal/:path*", "/api/interest", "/api/track", "/api/pipeline", "/api/event-sponsors"],
+  matcher: ["/internal/:path*", "/api/interest", "/api/track", "/api/pipeline", "/api/event-sponsors", "/api/admin/:path*"],
 };
