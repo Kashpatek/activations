@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "SemiAnalysis x AWS — Activate 2026";
+export const alt = "SemiAnalysis Events — Activate 2026";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -19,7 +19,6 @@ export default async function Image() {
           position: "relative",
         }}
       >
-        {/* Gradient orbs */}
         <div
           style={{
             position: "absolute",
@@ -43,7 +42,6 @@ export default async function Image() {
           }}
         />
 
-        {/* Content */}
         <div
           style={{
             display: "flex",
@@ -69,7 +67,7 @@ export default async function Image() {
 
           <div
             style={{
-              fontSize: 72,
+              fontSize: 92,
               fontWeight: 900,
               color: "#E8E4DD",
               lineHeight: 1.05,
@@ -81,38 +79,29 @@ export default async function Image() {
           </div>
           <div
             style={{
-              fontSize: 36,
-              color: "#8A8690",
-              fontWeight: 300,
-            }}
-          >
-            x
-          </div>
-          <div
-            style={{
-              fontSize: 72,
+              fontSize: 44,
               fontWeight: 900,
-              color: "#FF9900",
+              color: "#F7B041",
               lineHeight: 1.05,
-              letterSpacing: "-2px",
+              letterSpacing: "1px",
             }}
           >
-            AWS
+            Events
           </div>
 
           <div
             style={{
               fontSize: 22,
               color: "#8A8690",
-              marginTop: 12,
+              marginTop: 20,
               letterSpacing: "0.5px",
+              textAlign: "center",
             }}
           >
-            Eight Activations. Three Continents. The Decision-Makers Who Matter.
+            Nine activations. Three continents. The decision-makers who matter.
           </div>
         </div>
 
-        {/* Bottom bar */}
         <div
           style={{
             position: "absolute",

@@ -57,6 +57,7 @@ export type Submission = {
   submittedAt: string;
   internalNotes?: string;
   followUpStatus?: "none" | "scheduled" | "contacted" | "closed";
+  followUpDate?: string; // ISO datetime when followUpStatus === "scheduled"
 };
 
 export type CompanyPipeline = Record<string /*eventName*/, PipelineEntry>;

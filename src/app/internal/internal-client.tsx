@@ -30,13 +30,45 @@ const STATUS_CONFIG: Record<ActivationStatus, { label: string; color: string; bg
 };
 
 /* ═══════════════════════════════════════════════════════════
-   COMPANIES — prospects being pitched (internal-only list)
+   COMPANIES — prospects being pitched
+   Seed list + runtime discovery from submissions/pipeline.
+   Filters out system/test partners ("Unknown", "TEST", "Generic").
    ═══════════════════════════════════════════════════════════ */
-const COMPANIES = [
+const COMPANY_SEEDS = [
   { name: "AWS", color: "#FF9900" },
   { name: "Lambda", color: "#7C3AED" },
 ];
-const companyColor = (name: string) => COMPANIES.find(c => c.name === name)?.color || C.amber;
+const SYSTEM_PARTNERS = new Set(["Unknown", "TEST", "Generic", ""]);
+const COMPANY_DEFAULT_COLORS = ["#F7B041", "#0B86D1", "#2EAD8E", "#E06347", "#905CCB", "#26C9D8"];
+const colorForIndex = (i: number) => COMPANY_DEFAULT_COLORS[i % COMPANY_DEFAULT_COLORS.length];
+
+// Keep COMPANIES backwards-compat for code that still references it.
+// Discovered companies (from submissions or pipeline data) get merged in at runtime via useCompanies().
+const COMPANIES = COMPANY_SEEDS;
+const companyColor = (name: string) => COMPANIES.find(c => c.name === name)?.color || colorForIndex(Math.abs(name.split("").reduce((a, c) => a + c.charCodeAt(0), 0)));
+
+function useCompanies() {
+  const [discovered, setDiscovered] = useState<{ name: string; color: string }[]>(COMPANY_SEEDS);
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/pipeline").then(r => r.json()).catch(() => ({ companies: [] })),
+      fetch("/api/interest").then(r => r.json()).catch(() => []),
+    ]).then(([p, subs]) => {
+      const names = new Set<string>(COMPANY_SEEDS.map(s => s.name));
+      (p.companies || []).forEach((c: string) => !SYSTEM_PARTNERS.has(c) && names.add(c));
+      (Array.isArray(subs) ? subs : []).forEach((s: any) => {
+        const p = (s.partner || "").trim();
+        if (p && !SYSTEM_PARTNERS.has(p)) names.add(p);
+      });
+      const merged = Array.from(names).map((name) => {
+        const seed = COMPANY_SEEDS.find(s => s.name === name);
+        return seed || { name, color: companyColor(name) };
+      });
+      setDiscovered(merged);
+    });
+  }, []);
+  return discovered;
+}
 
 /* ═══════════════════════════════════════════════════════════
    EVENT DATA — comprehensive
@@ -1944,17 +1976,42 @@ function TemplateCard({ template, copied, onCopy }: { template: { key: string; t
 /* ═══════════════════════════════════════════════════════════
    INTERNAL: SUBMISSIONS VIEWER
    ═══════════════════════════════════════════════════════════ */
+function gcalLink(sub: any) {
+  // Generate a Google Calendar "create event" link
+  const when = sub.followUpDate ? new Date(sub.followUpDate) : new Date(Date.now() + 24 * 3600 * 1000);
+  const start = when.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const end = new Date(when.getTime() + 30 * 60 * 1000).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const title = `Follow-up: ${sub.name} (${sub.partner || "Prospect"})`;
+  const details = [
+    sub.role ? `Role: ${sub.role}` : "",
+    sub.email ? `Email: ${sub.email}` : "",
+    sub.events?.length ? `Events of interest: ${sub.events.join(", ")}` : "",
+    sub.notes ? `Their notes: ${sub.notes}` : "",
+    sub.internalNotes ? `Internal notes: ${sub.internalNotes}` : "",
+  ].filter(Boolean).join("\n\n");
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: title,
+    dates: `${start}/${end}`,
+    details,
+    add: sub.email || "",
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
 function SubmissionRow({ sub, color, onUpdated, onDeleted }: { sub: any; color: string; onUpdated: (s: any) => void; onDeleted: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false);
   const [localNotes, setLocalNotes] = useState(sub.internalNotes || "");
   const [status, setStatus] = useState(sub.followUpStatus || "none");
+  const [date, setDate] = useState(sub.followUpDate ? sub.followUpDate.slice(0, 16) : "");
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     setLocalNotes(sub.internalNotes || "");
     setStatus(sub.followUpStatus || "none");
-  }, [sub.internalNotes, sub.followUpStatus]);
+    setDate(sub.followUpDate ? sub.followUpDate.slice(0, 16) : "");
+  }, [sub.internalNotes, sub.followUpStatus, sub.followUpDate]);
 
   const save = async (patch: any) => {
     if (!sub.id) return;
@@ -2045,7 +2102,7 @@ function SubmissionRow({ sub, color, onUpdated, onDeleted }: { sub: any; color: 
                   style={{ width: "100%", padding: "8px 12px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, color: C.tx, fontFamily: ft, fontSize: 13, outline: "none", boxSizing: "border-box", resize: "vertical" }}
                 />
               </div>
-              <div style={{ flex: 1, minWidth: 180 }}>
+              <div style={{ flex: 1, minWidth: 220 }}>
                 <div style={{ fontFamily: mn, fontSize: 9, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>Follow-up</div>
                 <select
                   value={status}
@@ -2056,6 +2113,30 @@ function SubmissionRow({ sub, color, onUpdated, onDeleted }: { sub: any; color: 
                     <option key={k} value={k} style={{ background: C.bg }}>{v}</option>
                   ))}
                 </select>
+
+                {status === "scheduled" && (
+                  <div style={{ marginTop: 10, padding: "10px 12px", background: C.blue + "08", border: `1px solid ${C.blue}25`, borderRadius: 8 }}>
+                    <div style={{ fontFamily: mn, fontSize: 9, color: C.blue, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>When</div>
+                    <input
+                      type="datetime-local"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      onBlur={() => { if (date && date !== (sub.followUpDate || "").slice(0, 16)) save({ followUpDate: new Date(date).toISOString() }); }}
+                      style={{ width: "100%", padding: "6px 8px", background: "rgba(255,255,255,0.05)", border: `1px solid ${C.glassBorder}`, borderRadius: 6, color: C.tx, fontFamily: mn, fontSize: 12, outline: "none", boxSizing: "border-box", colorScheme: "dark" }}
+                    />
+                    {(sub.followUpDate || date) && (
+                      <a
+                        href={gcalLink({ ...sub, followUpDate: date ? new Date(date).toISOString() : sub.followUpDate })}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 8, fontFamily: mn, fontSize: 10, fontWeight: 700, color: "#fff", background: `linear-gradient(135deg, ${C.blue}, #0A6DAD)`, padding: "6px 12px", borderRadius: 6, textDecoration: "none" }}
+                      >
+                        + Add to Google Calendar
+                      </a>
+                    )}
+                  </div>
+                )}
+
                 <div style={{ fontFamily: mn, fontSize: 10, color: saving ? C.amber : C.txd, marginTop: 10 }}>
                   {saving ? "Saving…" : "Autosaves on change"}
                 </div>
@@ -2762,7 +2843,8 @@ function ContentCalendar() {
 }
 
 function CompanySelector({ company, setCompany }: { company: string; setCompany: (c: string) => void }) {
-  const options = ["All", ...COMPANIES.map(c => c.name)];
+  const companies = useCompanies();
+  const options = ["All", ...companies.map(c => c.name)];
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 32px 0", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
       <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "2px", textTransform: "uppercase" }}>Viewing</div>
@@ -2941,7 +3023,8 @@ function RecentActivity({ company }: { company: string }) {
    PIPELINE TAB — deal stages + budget tracker
    ═══════════════════════════════════════════════════════════ */
 function PipelineTab() {
-  const [company, setCompany] = useState<string>(COMPANIES[0].name);
+  const companies = useCompanies();
+  const [company, setCompany] = useState<string>(COMPANY_SEEDS[0].name);
   const [view, setView] = useState<"to-activate" | "activated">("to-activate");
   const [pipelines, setPipelines] = useState<Record<string, CompanyPipeline>>({});
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -3021,8 +3104,8 @@ function PipelineTab() {
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "stretch", marginBottom: 24 }}>
             <GlassCard style={{ padding: "16px 20px", flex: "0 0 auto" }}>
               <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8 }}>Company</div>
-              <div style={{ display: "flex", gap: 4 }}>
-                {COMPANIES.map(c => (
+              <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                {companies.map(c => (
                   <button key={c.name} onClick={() => setCompany(c.name)} style={{
                     fontFamily: ft, fontSize: 12, fontWeight: company === c.name ? 800 : 600,
                     color: company === c.name ? "#060608" : C.txm,
@@ -3379,6 +3462,7 @@ function SubSponsorsEditor({ eventName }: { eventName: string }) {
 }
 
 function SponsorRevenue({ company }: { company: string }) {
+  const companies = useCompanies();
   const [pipelines, setPipelines] = useState<Record<string, CompanyPipeline>>({});
   const [loading, setLoading] = useState(true);
 
@@ -3389,7 +3473,7 @@ function SponsorRevenue({ company }: { company: string }) {
     }).catch(() => setLoading(false));
   }, []);
 
-  const relevantCompanies = company === "All" ? COMPANIES.map(c => c.name) : [company];
+  const relevantCompanies = company === "All" ? companies.map(c => c.name) : [company];
 
   type Roll = { proposed: number; confirmed: number; paid: number; finalizedCount: number; inPipelineCount: number };
   const roll = (cnames: string[]): Roll => {
@@ -3412,7 +3496,7 @@ function SponsorRevenue({ company }: { company: string }) {
   const pctConfirmed = totals.proposed > 0 ? Math.round((totals.confirmed / totals.proposed) * 100) : 0;
 
   // Per-company breakdown (for All view)
-  const perCompany = COMPANIES.map(c => ({ name: c.name, color: c.color, ...roll([c.name]) }));
+  const perCompany = companies.map(c => ({ name: c.name, color: c.color, ...roll([c.name]) }));
 
   return (
     <section style={{ padding: "40px 32px" }}>
@@ -3516,7 +3600,6 @@ function InternalAnalyticsTab() {
         <SubmissionsViewer />
         <EngagementFunnel company={company} />
         <RecentActivity company={company} />
-        <StatusAdmin company={company} />
         <ROICalculator company={company} />
         <MichelleToolkit />
         <MakeMichelleHappy />

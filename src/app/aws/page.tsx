@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import ActivationsClient from "../activations-client";
-import { semianalysisLambdaConfig } from "@/config/semianalysis-lambda";
+import { semianalysisAwsConfig } from "@/config/semianalysis-aws";
 
 export const metadata: Metadata = {
   title: "SemiAnalysis — 2026 Partnership",
@@ -10,6 +10,6 @@ export const metadata: Metadata = {
   twitter: { title: "SemiAnalysis — 2026 Partnership" },
 };
 
-export default function LambdaPage() {
-  return <ActivationsClient config={semianalysisLambdaConfig} />;
+export default function AwsPage() {
+  return <ActivationsClient config={semianalysisAwsConfig} />;
 }

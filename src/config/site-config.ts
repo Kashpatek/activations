@@ -30,6 +30,7 @@ export type Testimonial = { quote: string; author: string; company: string };
 export type TierItem = { tier: string; desc: string; features: string[]; highlight?: boolean };
 
 export type SiteConfig = {
+  mode?: "branded" | "generic"; // branded = SemiAnalysis × Partner; generic = SemiAnalysis Events, asks for company in form
   host: {
     name: string;
     shortName?: string;

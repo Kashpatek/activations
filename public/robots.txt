@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /aws
+Disallow: /aws/
+Disallow: /lambda
+Disallow: /lambda/
+Disallow: /internal
+Disallow: /internal/
+Disallow: /login
+Disallow: /api/

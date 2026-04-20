@@ -1209,7 +1209,7 @@ function ClosingPitch() {
 
   const risks = [
     { title: "The venue window closes first", body: `Computex banquet and NeurIPS vessel are already booked. Holding them costs us real dollars. Other partners are in conversation \u2014 we want ${partner.name} first.` },
-    { title: "Audience curation starts 8\u201312 weeks out", body: "The best attendees don't respond to last-minute invites. Locking the partnership now means we build the guest list with AWS in mind from day one." },
+    { title: "Audience curation starts 8\u201312 weeks out", body: `The best attendees don't respond to last-minute invites. Locking the partnership now means we build the guest list with ${partner.name} in mind from day one.` },
     { title: "2027 renewal is decided by 2026 performance", body: `Strong partners become default partners. Anchoring the 2026 calendar is the lowest-risk way to own 2027\u20132028 across the same community.` },
   ];
 
@@ -1286,9 +1286,10 @@ function ClosingPitch() {
    INTEREST FORM
    ═══════════════════════════════════════════════════════════ */
 function InterestForm() {
-  const { events: EVENTS, partner } = useSiteConfig();
+  const { events: EVENTS, partner, mode } = useSiteConfig();
+  const isGeneric = mode === "generic";
   const { plan } = usePlan();
-  const [form, setForm] = useState({ name: "", email: "", role: "", events: new Set<string>(), notes: "" });
+  const [form, setForm] = useState({ name: "", email: "", role: "", company: "", events: new Set<string>(), notes: "" });
   const [submitted, setSubmitted] = useState(false);
   const toggleEvent = (name: string) => { const next = new Set(form.events); next.has(name) ? next.delete(name) : next.add(name); setForm({ ...form, events: next }); };
 
@@ -1329,9 +1330,17 @@ function InterestForm() {
                 </div>
               ))}
             </div>
+            {isGeneric && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>Company *</div>
+                <input value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} placeholder="e.g. NVIDIA, Anthropic, Scale AI..."
+                  style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 10, color: C.tx, fontFamily: ft, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+                  onFocus={e => { e.target.style.borderColor = C.amber; }} onBlur={e => { e.target.style.borderColor = C.glassBorder; }} />
+              </div>
+            )}
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>Role / Title</div>
-              <input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} placeholder={`e.g. Head of Marketing, ${partner.name}`}
+              <input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} placeholder={isGeneric ? "e.g. Head of Marketing" : `e.g. Head of Marketing, ${partner.name}`}
                 style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 10, color: C.tx, fontFamily: ft, fontSize: 14, outline: "none", boxSizing: "border-box" }}
                 onFocus={e => { e.target.style.borderColor = C.amber; }} onBlur={e => { e.target.style.borderColor = C.glassBorder; }} />
             </div>
@@ -1359,10 +1368,12 @@ function InterestForm() {
             </div>
             <button onClick={async () => {
               if (!form.name || !form.email) return;
+              if (isGeneric && !form.company.trim()) return;
+              const partnerName = isGeneric ? form.company.trim() : partner.name;
               try {
-                const res = await fetch("/api/interest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, events: Array.from(form.events), partner: partner.name, host: "SemiAnalysis" }) });
+                const res = await fetch("/api/interest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, events: Array.from(form.events), partner: partnerName, host: "SemiAnalysis" }) });
                 if (!res.ok) throw new Error("Failed");
-                fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "form_submit", partner: partner.name, host: "SemiAnalysis", metadata: { eventCount: form.events.size } }) }).catch(() => {});
+                fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "form_submit", partner: partnerName, host: "SemiAnalysis", metadata: { eventCount: form.events.size } }) }).catch(() => {});
                 setSubmitted(true);
               } catch { setSubmitted(true); }
             }} style={{ width: "100%", fontFamily: ft, fontSize: 16, fontWeight: 800, color: "#fff", background: `linear-gradient(135deg, ${C.amber}, #E8A020)`, padding: "16px", borderRadius: 12, border: "none", cursor: "pointer", boxShadow: `0 4px 30px ${C.amber}30` }}>
@@ -1472,22 +1483,24 @@ export default function EventsClient({ config }: { config: SiteConfig }) {
 }
 
 function EventsClientInner() {
-  const { host, partner } = useSiteConfig();
+  const { host, partner, mode } = useSiteConfig();
+  const isGeneric = mode === "generic";
   const [active, setActive] = useState(0);
   const [ctaVisible, setCtaVisible] = useState(false);
 
   useEffect(() => {
+    const trackedPartner = isGeneric ? "Generic" : partner.name;
     fetch("/api/track", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         event: "page_open",
-        partner: partner.name,
+        partner: trackedPartner,
         host: host.name,
         metadata: { path: typeof window !== "undefined" ? window.location.pathname : "" },
       }),
     }).catch(() => {});
-  }, [partner.name, host.name]);
+  }, [partner.name, host.name, isGeneric]);
 
   // Hide the floating Submit button when the CTA form is in viewport
   useEffect(() => {
@@ -1507,7 +1520,7 @@ function EventsClientInner() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         event: "cta_click",
-        partner: partner.name,
+        partner: isGeneric ? "Generic" : partner.name,
         host: host.name,
         metadata: { source: "floating_submit" },
       }),
@@ -1554,10 +1567,16 @@ function EventsClientInner() {
         borderBottom: `1px solid ${C.glassBorder}`,
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <LogoWithFallback src={host.logo} name={host.name} height={22} invert />
-          <span style={{ color: C.txd, fontSize: 20, fontWeight: 200 }}>{"\u00D7"}</span>
-          <LogoWithFallback src={partner.logo} name={partner.name} height={20} />
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <LogoWithFallback src={host.logo} name={host.name} height={isGeneric ? 28 : 22} invert />
+          {isGeneric ? (
+            <span style={{ fontFamily: gf, fontSize: 26, fontWeight: 900, color: C.tx, letterSpacing: "-0.5px", lineHeight: 1 }}>Events</span>
+          ) : (
+            <>
+              <span style={{ color: C.txd, fontSize: 20, fontWeight: 200 }}>{"\u00D7"}</span>
+              <LogoWithFallback src={partner.logo} name={partner.name} height={20} />
+            </>
+          )}
         </div>
 
         <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 3 }}>

@@ -3,20 +3,21 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SemiAnalysis x AWS — Activate 2026",
+  title: "SemiAnalysis Events — Activate 2026",
   description:
-    "Strategic event partnership opportunities across MLSys, Computex, ICML, NeurIPS, and more. Reach the AI infrastructure community where it gathers.",
+    "SemiAnalysis produces exclusive event activations that reach AI infrastructure decision-makers. 9 events, 3 continents, 2,700+ decision-makers.",
   openGraph: {
-    title: "SemiAnalysis x AWS — Activate 2026",
+    title: "SemiAnalysis Events — Activate 2026",
     description:
-      "Eight activations. Three continents. The decision-makers who matter most.",
+      "Nine activations. Three continents. The decision-makers who matter most.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "SemiAnalysis x AWS — Activate 2026",
+    title: "SemiAnalysis Events — Activate 2026",
     description:
-      "Eight activations. Three continents. The decision-makers who matter most.",
+      "Nine activations. Three continents. The decision-makers who matter most.",
   },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
