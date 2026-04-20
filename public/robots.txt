@@ -1,9 +1,7 @@
 User-agent: *
 Allow: /
-Disallow: /aws
-Disallow: /aws/
-Disallow: /lambda
-Disallow: /lambda/
+Disallow: /p
+Disallow: /p/
 Disallow: /internal
 Disallow: /internal/
 Disallow: /login
