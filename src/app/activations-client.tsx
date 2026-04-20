@@ -1608,6 +1608,7 @@ function EventsClientInner() {
       <button
         onClick={handleSubmitCTAClick}
         aria-label="Submit interest"
+        className="floating-submit-cta"
         style={{
           position: "fixed",
           right: ctaVisible ? -240 : 0,
@@ -1628,23 +1629,30 @@ function EventsClientInner() {
           borderTopRightRadius: 0,
           borderBottomRightRadius: 0,
           cursor: "pointer",
-          boxShadow: `0 6px 30px ${C.blue}55, 0 0 0 1px rgba(255,255,255,0.08) inset`,
           display: "flex",
           alignItems: "center",
           gap: 10,
-          transition: "right 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease, box-shadow 0.2s ease, padding-right 0.2s ease",
+          transition: "right 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding-right 0.2s ease",
+          animation: "submitGlow 2.2s ease-in-out infinite",
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.paddingRight = "30px";
-          e.currentTarget.style.boxShadow = `0 8px 40px ${C.blue}88, 0 0 0 1px rgba(255,255,255,0.12) inset`;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.paddingRight = "22px";
-          e.currentTarget.style.boxShadow = `0 6px 30px ${C.blue}55, 0 0 0 1px rgba(255,255,255,0.08) inset`;
-        }}
+        onMouseEnter={(e) => { e.currentTarget.style.paddingRight = "30px"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.paddingRight = "22px"; }}
       >
         <span>Submit Now</span>
-        <span style={{ fontSize: 16, lineHeight: 1 }}>{"\u2192"}</span>
+        <span className="floating-submit-arrow" style={{ fontSize: 16, lineHeight: 1, display: "inline-block" }}>{"\u2193"}</span>
+        <style>{`
+          @keyframes submitGlow {
+            0%, 100% { box-shadow: 0 6px 30px ${C.blue}55, 0 0 0 1px rgba(255,255,255,0.08) inset; }
+            50%      { box-shadow: 0 10px 50px ${C.blue}cc, 0 0 0 1px rgba(255,255,255,0.18) inset, 0 0 40px ${C.blue}66; }
+          }
+          @keyframes submitArrowBounce {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(4px); }
+          }
+          .floating-submit-cta .floating-submit-arrow {
+            animation: submitArrowBounce 1.4s ease-in-out infinite;
+          }
+        `}</style>
       </button>
     </>
   );
