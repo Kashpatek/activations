@@ -1168,6 +1168,10 @@ function BudgetStrategizer() {
 function Testimonials() {
   const { testimonials: quotes } = useSiteConfig();
 
+  // Hide the section entirely while real quotes are being gathered.
+  const hasRealQuotes = quotes.some((q) => q.quote && !q.quote.startsWith("[Pending"));
+  if (!hasRealQuotes) return null;
+
   return (
     <section style={{ padding: "80px 32px" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>

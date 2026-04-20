@@ -247,12 +247,8 @@ export const semianalysisGenericConfig: SiteConfig = {
     { title: "Trusted Industry Voice", body: "Cited by Bloomberg, Financial Times, and The Information. When SemiAnalysis speaks, the semiconductor and AI community listens and acts.", icon: "\u2606" },
     { title: "750 at NeurIPS 2025", body: "Our boat cruise with SAIL drew 750 attendees and 680 decision-makers — 38% academia, 18% Big Tech, 12% AI startups. The format is proven.", icon: "\u2605" },
   ],
-  testimonials: [
-    { quote: "The SemiAnalysis NeurIPS cruise was the single best networking event I attended all year. Every conversation was high-signal.", author: "VP of Engineering", company: "AI Startup (Series C)" },
-    { quote: "Unlike typical conference happy hours, every person I talked to actually understood the infrastructure stack. That never happens.", author: "Director of Cloud Architecture", company: "Fortune 500" },
-    { quote: "I made three partnerships at the Computex banquet that turned into signed contracts within 60 days.", author: "CEO", company: "Sovereign Cloud Provider" },
-    { quote: "SemiAnalysis events feel exclusive without being exclusionary. The curation is what makes the difference.", author: "ML Research Lead", company: "Top 3 AI Lab" },
-  ],
+  // Testimonials hidden until real quotes are collected.
+  testimonials: [],
   tiers: [
     { tier: "Tier 1", desc: "1 conference \u2014 $100K", features: ["Presenting partner at 1 chosen activation", "Co-branded presence, signage, and attendee experience", "Newsletter feature before and after the event", "Post-event attendee list + sentiment report"] },
     { tier: "Tier 2", desc: "2\u20133 conferences \u2014 $600K", features: ["Presenting partner at 2\u20133 activations of your choice", "Year-long co-marketing across SemiAnalysis channels", "Priority audience curation and VIP seating", "Quarterly strategy reviews with the SemiAnalysis team", "Cross-event attendee pipeline analysis"], highlight: true },
@@ -260,8 +256,8 @@ export const semianalysisGenericConfig: SiteConfig = {
   ],
   hero: {
     eyebrow: "2026 Event Partnership",
-    headline: "Activate at the Events\nThat Move Your Market",
-    subtitle: "SemiAnalysis produces the calendar of exclusive activations that reach AI infrastructure decision-makers globally. Pick the events that align with your GTM — we build the rest.",
+    headline: "The Calendar Your\nBuyers Already Read",
+    subtitle: "SemiAnalysis is the most-read independent voice in AI infrastructure — 200K+ subscribers, 3M+ monthly reach. We produce the events the decision-makers you're trying to sell actually show up to. Partner with us in 2026 and get your brand inside the rooms where the spend gets decided.",
   },
   whySection: {
     title: "Why SemiAnalysis?",

@@ -246,14 +246,8 @@ export const semianalysisAwsConfig: SiteConfig = {
     { title: "Trusted Industry Voice", body: "Cited by Bloomberg, Financial Times, and The Information. When SemiAnalysis speaks, the semiconductor and AI community listens and acts.", icon: "\u2606" },
     { title: "750 at NeurIPS 2025", body: "Our boat cruise with SAIL drew 750 attendees and 680 decision-makers — 38% academia, 18% Big Tech, 12% AI startups. The format is proven.", icon: "\u2605" },
   ],
-  testimonials: [
-    { quote: "[Pending quote]", author: "\u2014", company: "Lambda" },
-    { quote: "[Pending quote]", author: "\u2014", company: "Cisco" },
-    { quote: "[Pending quote]", author: "\u2014", company: "Meter" },
-    { quote: "[Pending quote]", author: "\u2014", company: "Clockwork" },
-    { quote: "[Pending quote]", author: "\u2014", company: "Makcra" },
-    { quote: "[Pending quote]", author: "Alessio", company: "Deubel.vo" },
-  ],
+  // Testimonials hidden until real quotes are collected.
+  testimonials: [],
   tiers: [
     { tier: "Tier 1", desc: "1 conference \u2014 $100K", features: ["Presenting partner at 1 chosen activation", "Co-branded presence, signage, and attendee experience", "Newsletter feature before and after the event", "Post-event attendee list + sentiment report"] },
     { tier: "Tier 2", desc: "2\u20133 conferences \u2014 $600K", features: ["Presenting partner at 2\u20133 activations of your choice", "Year-long co-marketing across SemiAnalysis channels", "Priority audience curation and VIP seating", "Quarterly strategy reviews with the SemiAnalysis team", "Cross-event attendee pipeline analysis"], highlight: true },
