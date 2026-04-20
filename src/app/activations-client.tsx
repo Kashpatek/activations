@@ -1380,6 +1380,7 @@ export default function EventsClient({ config }: { config: SiteConfig }) {
 function EventsClientInner() {
   const { host, partner } = useSiteConfig();
   const [active, setActive] = useState(0);
+  const [ctaVisible, setCtaVisible] = useState(false);
 
   useEffect(() => {
     fetch("/api/track", {
@@ -1393,6 +1394,35 @@ function EventsClientInner() {
       }),
     }).catch(() => {});
   }, [partner.name, host.name]);
+
+  // Hide the floating Submit button when the CTA form is in viewport
+  useEffect(() => {
+    const el = document.getElementById("cta");
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setCtaVisible(entry.isIntersecting),
+      { threshold: 0.15 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [active]);
+
+  const handleSubmitCTAClick = () => {
+    fetch("/api/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event: "cta_click",
+        partner: partner.name,
+        host: host.name,
+        metadata: { source: "floating_submit" },
+      }),
+    }).catch(() => {});
+    if (active !== 0) setActive(0);
+    setTimeout(() => {
+      document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" });
+    }, active !== 0 ? 80 : 0);
+  };
 
   return (
     <>
@@ -1479,6 +1509,49 @@ function EventsClientInner() {
       </nav>
 
       {active === 0 ? <OverviewTab internal={false} /> : <CalendarTab />}
+
+      {/* Floating Submit Now CTA — right side, hides when form is in view */}
+      <button
+        onClick={handleSubmitCTAClick}
+        aria-label="Submit interest"
+        style={{
+          position: "fixed",
+          right: ctaVisible ? -240 : 0,
+          top: "50%",
+          transform: "translateY(-50%)",
+          zIndex: 90,
+          background: `linear-gradient(135deg, ${C.blue}, #0A6DAD)`,
+          color: "#fff",
+          fontFamily: ft,
+          fontWeight: 800,
+          fontSize: 13,
+          letterSpacing: "1.5px",
+          textTransform: "uppercase",
+          padding: "14px 22px 14px 20px",
+          border: "none",
+          borderTopLeftRadius: 14,
+          borderBottomLeftRadius: 14,
+          borderTopRightRadius: 0,
+          borderBottomRightRadius: 0,
+          cursor: "pointer",
+          boxShadow: `0 6px 30px ${C.blue}55, 0 0 0 1px rgba(255,255,255,0.08) inset`,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          transition: "right 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease, box-shadow 0.2s ease, padding-right 0.2s ease",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.paddingRight = "30px";
+          e.currentTarget.style.boxShadow = `0 8px 40px ${C.blue}88, 0 0 0 1px rgba(255,255,255,0.12) inset`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.paddingRight = "22px";
+          e.currentTarget.style.boxShadow = `0 6px 30px ${C.blue}55, 0 0 0 1px rgba(255,255,255,0.08) inset`;
+        }}
+      >
+        <span>Submit Now</span>
+        <span style={{ fontSize: 16, lineHeight: 1 }}>{"\u2192"}</span>
+      </button>
     </>
   );
 }
