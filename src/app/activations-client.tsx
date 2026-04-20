@@ -639,6 +639,7 @@ function TimelineView() {
    CALENDAR TAB (wraps both views)
    ═══════════════════════════════════════════════════════════ */
 function CalendarTab() {
+  const { events: EVENTS } = useSiteConfig();
   const [view, setView] = useState<"calendar" | "timeline">("timeline");
   return (
     <div style={{ background: C.bg, minHeight: "100vh", position: "relative" }}>
@@ -648,7 +649,7 @@ function CalendarTab() {
           <SectionLabel>Schedule</SectionLabel>
           <SectionTitle>2026 Event Calendar</SectionTitle>
           <p style={{ fontFamily: ft, fontSize: 17, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 32 }}>
-            Eight activations spanning May through December — every major AI and infrastructure conference where it matters most.
+            {EVENTS.length} activations spanning the year — every major AI and infrastructure conference where it matters most.
           </p>
         </FadeIn>
 
