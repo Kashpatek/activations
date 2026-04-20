@@ -1345,7 +1345,12 @@ function InterestForm() {
             </div>
             <button onClick={async () => {
               if (!form.name || !form.email) return;
-              try { const res = await fetch("/api/interest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, events: Array.from(form.events) }) }); if (!res.ok) throw new Error("Failed"); setSubmitted(true); } catch { setSubmitted(true); }
+              try {
+                const res = await fetch("/api/interest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, events: Array.from(form.events), partner: partner.name, host: "SemiAnalysis" }) });
+                if (!res.ok) throw new Error("Failed");
+                fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "form_submit", partner: partner.name, host: "SemiAnalysis", metadata: { eventCount: form.events.size } }) }).catch(() => {});
+                setSubmitted(true);
+              } catch { setSubmitted(true); }
             }} style={{ width: "100%", fontFamily: ft, fontSize: 16, fontWeight: 800, color: "#fff", background: `linear-gradient(135deg, ${C.amber}, #E8A020)`, padding: "16px", borderRadius: 12, border: "none", cursor: "pointer", boxShadow: `0 4px 30px ${C.amber}30` }}>
               Submit Interest — {form.events.size} Event{form.events.size !== 1 ? "s" : ""} Selected
             </button>
@@ -1375,6 +1380,19 @@ export default function EventsClient({ config }: { config: SiteConfig }) {
 function EventsClientInner() {
   const { host, partner } = useSiteConfig();
   const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event: "page_open",
+        partner: partner.name,
+        host: host.name,
+        metadata: { path: typeof window !== "undefined" ? window.location.pathname : "" },
+      }),
+    }).catch(() => {});
+  }, [partner.name, host.name]);
 
   return (
     <>

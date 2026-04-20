@@ -34,9 +34,17 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Protect /api/track GET (analytics viewer)
+  if (pathname === "/api/track" && request.method === "GET") {
+    const token = request.cookies.get("sa-auth")?.value;
+    if (!token || !(await verifyToken(token))) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/internal/:path*", "/api/interest"],
+  matcher: ["/internal/:path*", "/api/interest", "/api/track"],
 };

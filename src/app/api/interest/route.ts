@@ -22,7 +22,7 @@ async function getSubmissions() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, role, events, notes } = body;
+    const { name, email, role, events, notes, partner, host } = body;
 
     if (!name || !email) {
       return Response.json({ error: "Name and email required" }, { status: 400 });
@@ -36,6 +36,8 @@ export async function POST(request: Request) {
       role,
       events,
       notes,
+      partner: partner || "Unknown",
+      host: host || "SemiAnalysis",
       submittedAt: new Date().toISOString(),
     });
     await writeFile(FILE, JSON.stringify(submissions, null, 2));

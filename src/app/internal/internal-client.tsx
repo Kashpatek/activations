@@ -1871,53 +1871,141 @@ function TemplateCard({ template, copied, onCopy }: { template: { key: string; t
    ═══════════════════════════════════════════════════════════ */
 function SubmissionsViewer() {
   const [subs, setSubs] = useState<any[]>([]);
+  const [tracks, setTracks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<string>("all");
 
-  useEffect(() => {
-    fetch("/api/interest").then(r => r.json()).then(d => { setSubs(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
+  const load = () => {
+    setLoading(true);
+    Promise.all([
+      fetch("/api/interest").then(r => r.json()).catch(() => []),
+      fetch("/api/track").then(r => r.json()).catch(() => []),
+    ]).then(([s, t]) => {
+      setSubs(Array.isArray(s) ? s : []);
+      setTracks(Array.isArray(t) ? t : []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  };
+
+  useEffect(load, []);
+
+  const partners = Array.from(new Set([
+    ...subs.map(s => s.partner || "Unknown"),
+    ...tracks.map(t => t.partner || "Unknown"),
+  ]));
+
+  const filtered = filter === "all" ? subs : subs.filter(s => (s.partner || "Unknown") === filter);
+
+  const visitsByPartner: Record<string, number> = {};
+  const openEventByPartner: Record<string, Set<string>> = {};
+  tracks.forEach(t => {
+    const p = t.partner || "Unknown";
+    if (t.event === "page_open") visitsByPartner[p] = (visitsByPartner[p] || 0) + 1;
+    if (t.event === "form_submit") {
+      if (!openEventByPartner[p]) openEventByPartner[p] = new Set();
+    }
+  });
+  const partnerStats = partners.map(p => ({
+    partner: p,
+    visits: visitsByPartner[p] || 0,
+    submissions: subs.filter(s => (s.partner || "Unknown") === p).length,
+  }));
+
+  const partnerColor = (name: string) => {
+    const map: Record<string, string> = { AWS: "#FF9900", Lambda: "#7C3AED" };
+    return map[name] || C.amber;
+  };
 
   return (
     <section style={{ padding: "80px 32px" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <FadeIn>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <SectionLabel>Inbound Interest</SectionLabel>
+            <SectionLabel>Inbound Activity</SectionLabel>
             <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+            <button onClick={load} style={{ marginLeft: "auto", fontFamily: mn, fontSize: 10, color: C.txm, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}>Refresh</button>
           </div>
-          <SectionTitle>Form Submissions</SectionTitle>
+          <SectionTitle>Visits & Submissions by Partner</SectionTitle>
         </FadeIn>
+
+        {/* Per-partner activity cards */}
+        {partnerStats.length > 0 && (
+          <div data-grid-responsive style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(partnerStats.length, 4)}, 1fr)`, gap: 12, marginBottom: 32 }}>
+            {partnerStats.map(ps => {
+              const col = partnerColor(ps.partner);
+              return (
+                <GlassCard key={ps.partner} style={{ padding: "20px 22px", borderLeft: `3px solid ${col}` }}>
+                  <div style={{ fontFamily: mn, fontSize: 10, color: col, letterSpacing: "2px", textTransform: "uppercase", fontWeight: 700, marginBottom: 8 }}>{ps.partner}</div>
+                  <div style={{ display: "flex", gap: 20 }}>
+                    <div>
+                      <div style={{ fontFamily: gf, fontSize: 28, fontWeight: 900, color: C.tx, lineHeight: 1 }}>{ps.visits}</div>
+                      <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, marginTop: 4 }}>visits</div>
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: gf, fontSize: 28, fontWeight: 900, color: col, lineHeight: 1 }}>{ps.submissions}</div>
+                      <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, marginTop: 4 }}>submissions</div>
+                    </div>
+                  </div>
+                </GlassCard>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Filter tabs */}
+        {partners.length > 1 && (
+          <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
+            {["all", ...partners].map(p => (
+              <button key={p} onClick={() => setFilter(p)} style={{
+                fontFamily: mn, fontSize: 11, fontWeight: filter === p ? 700 : 500,
+                color: filter === p ? "#060608" : C.txm,
+                background: filter === p ? `linear-gradient(135deg, ${C.amber}, #E8A020)` : "rgba(255,255,255,0.03)",
+                border: `1px solid ${filter === p ? C.amber : C.glassBorder}`,
+                borderRadius: 10, padding: "6px 14px", cursor: "pointer", textTransform: "uppercase", letterSpacing: "1px",
+              }}>{p}{p !== "all" ? ` (${subs.filter(s => (s.partner || "Unknown") === p).length})` : ""}</button>
+            ))}
+          </div>
+        )}
 
         {loading ? (
           <div style={{ fontFamily: mn, fontSize: 13, color: C.txd, padding: "40px 0" }}>Loading submissions...</div>
-        ) : subs.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <GlassCard style={{ padding: "40px 24px", textAlign: "center" }}>
-            <div style={{ fontFamily: ft, fontSize: 16, color: C.txm }}>No submissions yet. When AWS fills out the interest form, they'll appear here.</div>
+            <div style={{ fontFamily: ft, fontSize: 16, color: C.txm }}>No submissions yet{filter !== "all" ? ` for ${filter}` : ""}. When someone fills out the interest form, they'll appear here.</div>
           </GlassCard>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {subs.map((s, i) => (
-              <FadeIn key={i}>
-                <GlassCard style={{ padding: "20px 24px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                    <div>
-                      <div style={{ fontFamily: ft, fontSize: 16, fontWeight: 700, color: C.tx }}>{s.name}</div>
-                      <div style={{ fontFamily: mn, fontSize: 12, color: C.amber }}>{s.email}</div>
-                      {s.role && <div style={{ fontFamily: ft, fontSize: 13, color: C.txm, marginTop: 2 }}>{s.role}</div>}
+            {filtered.map((s, i) => {
+              const pname = s.partner || "Unknown";
+              const col = partnerColor(pname);
+              return (
+                <FadeIn key={i}>
+                  <GlassCard style={{ padding: "20px 24px", borderLeft: `3px solid ${col}` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, gap: 12, flexWrap: "wrap" }}>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                          <span style={{ fontFamily: ft, fontSize: 16, fontWeight: 700, color: C.tx }}>{s.name}</span>
+                          <span style={{ fontFamily: mn, fontSize: 9, color: col, background: col + "15", border: `1px solid ${col}30`, borderRadius: 20, padding: "2px 10px", letterSpacing: "1px", fontWeight: 700 }}>{pname}</span>
+                        </div>
+                        <div style={{ fontFamily: mn, fontSize: 12, color: C.amber }}>{s.email}</div>
+                        {s.role && <div style={{ fontFamily: ft, fontSize: 13, color: C.txm, marginTop: 2 }}>{s.role}</div>}
+                      </div>
+                      <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, textAlign: "right" }}>
+                        {s.submittedAt ? new Date(s.submittedAt).toLocaleString() : ""}
+                      </div>
                     </div>
-                    <div style={{ fontFamily: mn, fontSize: 10, color: C.txd }}>{s.submittedAt ? new Date(s.submittedAt).toLocaleDateString() : ""}</div>
-                  </div>
-                  {s.events?.length > 0 && (
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
-                      {s.events.map((e: string) => (
-                        <span key={e} style={{ fontFamily: mn, fontSize: 10, color: C.amber, background: C.amber + "10", border: `1px solid ${C.amber}25`, borderRadius: 8, padding: "3px 10px" }}>{e}</span>
-                      ))}
-                    </div>
-                  )}
-                  {s.notes && <div style={{ fontFamily: ft, fontSize: 13, color: C.txm, marginTop: 10, lineHeight: 1.5, fontStyle: "italic" }}>"{s.notes}"</div>}
-                </GlassCard>
-              </FadeIn>
-            ))}
+                    {s.events?.length > 0 && (
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                        {s.events.map((e: string) => (
+                          <span key={e} style={{ fontFamily: mn, fontSize: 10, color: C.amber, background: C.amber + "10", border: `1px solid ${C.amber}25`, borderRadius: 8, padding: "3px 10px" }}>{e}</span>
+                        ))}
+                      </div>
+                    )}
+                    {s.notes && <div style={{ fontFamily: ft, fontSize: 13, color: C.txm, marginTop: 10, lineHeight: 1.5, fontStyle: "italic" }}>"{s.notes}"</div>}
+                  </GlassCard>
+                </FadeIn>
+              );
+            })}
           </div>
         )}
       </div>
