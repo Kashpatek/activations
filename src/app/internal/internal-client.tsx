@@ -1,6 +1,8 @@
 // @ts-nocheck
 "use client";
 import { useState, useEffect, useRef, useMemo } from "react";
+import type { PipelineStatus, PipelineEntry, CompanyPipeline } from "@/lib/pipeline-types";
+import { PIPELINE_STAGES, emptyEntry } from "@/lib/pipeline-types";
 
 /* ═══════════════════════════════════════════════════════════
    DESIGN TOKENS
@@ -1597,12 +1599,8 @@ function PasscodeGate({ onUnlock }: { onUnlock: () => void }) {
 /* ═══════════════════════════════════════════════════════════
    MAIN EXPORT — TAB CONTROLLER + AUTH
    ═══════════════════════════════════════════════════════════ */
-const TABS_AWS = [
-  { key: "overview", label: "Overview" },
-  { key: "calendar", label: "Calendar" },
-];
 const TABS_INTERNAL = [
-  { key: "overview", label: "Overview" },
+  { key: "pipeline", label: "Pipeline" },
   { key: "calendar", label: "Calendar" },
   { key: "analytics", label: "Analytics" },
   { key: "ops", label: "Ops" },
@@ -2837,6 +2835,411 @@ function RecentActivity({ company }: { company: string }) {
   );
 }
 
+/* ═══════════════════════════════════════════════════════════
+   PIPELINE TAB — deal stages + budget tracker
+   ═══════════════════════════════════════════════════════════ */
+function PipelineTab() {
+  const [company, setCompany] = useState<string>(COMPANIES[0].name);
+  const [view, setView] = useState<"to-activate" | "activated">("to-activate");
+  const [pipelines, setPipelines] = useState<Record<string, CompanyPipeline>>({});
+  const [loading, setLoading] = useState(true);
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+
+  const load = () => {
+    setLoading(true);
+    fetch("/api/pipeline")
+      .then(r => r.json())
+      .then(d => { setPipelines(d.pipelines || {}); setLoading(false); })
+      .catch(() => setLoading(false));
+  };
+  useEffect(load, []);
+
+  const companyPipeline: CompanyPipeline = pipelines[company] || {};
+
+  const patchEntry = async (eventName: string, patch: Partial<PipelineEntry>) => {
+    const key = `${company}:${eventName}`;
+    setSavingKey(key);
+    try {
+      const res = await fetch("/api/pipeline", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ company, event: eventName, patch }),
+      });
+      const d = await res.json();
+      if (d.entry) {
+        setPipelines(prev => ({
+          ...prev,
+          [company]: { ...(prev[company] || {}), [eventName]: d.entry },
+        }));
+      }
+    } finally {
+      setSavingKey(null);
+    }
+  };
+
+  const entryFor = (eventName: string): PipelineEntry =>
+    companyPipeline[eventName] || emptyEntry();
+
+  const isFinalized = (s: PipelineStatus) => s === "finalized";
+  const toActivate = EVENTS.filter(ev => !isFinalized(entryFor(ev.name).status));
+  const activated = EVENTS.filter(ev => isFinalized(entryFor(ev.name).status));
+
+  const rows = view === "to-activate" ? toActivate : activated;
+  const col = companyColor(company);
+
+  // Totals for the header
+  const sumBudget = (field: "proposed" | "confirmed" | "paid") =>
+    EVENTS.reduce((s, ev) => s + (entryFor(ev.name).budget[field] || 0), 0);
+  const totalProposed = sumBudget("proposed");
+  const totalConfirmed = sumBudget("confirmed");
+  const totalPaid = sumBudget("paid");
+
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", position: "relative" }}>
+      <GradientMesh />
+      <div style={{ position: "relative", zIndex: 1, paddingTop: 100, paddingBottom: 80 }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
+          <FadeIn>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <SectionLabel>Deal Pipeline</SectionLabel>
+              <span style={{ fontFamily: mn, fontSize: 9, color: col, background: col + "15", border: `1px solid ${col}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px", fontWeight: 700 }}>{company.toUpperCase()}</span>
+            </div>
+            <SectionTitle>Activation Pipeline & Budget</SectionTitle>
+            <p style={{ fontFamily: ft, fontSize: 15, color: C.txm, lineHeight: 1.7, maxWidth: 680, marginBottom: 24 }}>
+              Track every (company × event) deal from proposal through finalization. Submissions auto-advance from Proposed to Inquired; from there, move each deal through the stages as you close.
+            </p>
+          </FadeIn>
+
+          {/* Top row: company selector + totals */}
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "stretch", marginBottom: 24 }}>
+            <GlassCard style={{ padding: "16px 20px", flex: "0 0 auto" }}>
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8 }}>Company</div>
+              <div style={{ display: "flex", gap: 4 }}>
+                {COMPANIES.map(c => (
+                  <button key={c.name} onClick={() => setCompany(c.name)} style={{
+                    fontFamily: ft, fontSize: 12, fontWeight: company === c.name ? 800 : 600,
+                    color: company === c.name ? "#060608" : C.txm,
+                    background: company === c.name ? `linear-gradient(135deg, ${c.color}, ${c.color}cc)` : "transparent",
+                    border: `1px solid ${company === c.name ? c.color : C.glassBorder}`,
+                    borderRadius: 8, padding: "6px 14px", cursor: "pointer",
+                  }}>{c.name}</button>
+                ))}
+              </div>
+            </GlassCard>
+
+            <GlassCard style={{ padding: "16px 22px", flex: 1, minWidth: 180 }}>
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>Proposed</div>
+              <div style={{ fontFamily: mn, fontSize: 22, fontWeight: 700, color: C.txm, lineHeight: 1 }}>${totalProposed}K</div>
+            </GlassCard>
+            <GlassCard style={{ padding: "16px 22px", flex: 1, minWidth: 180 }}>
+              <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>Confirmed</div>
+              <div style={{ fontFamily: mn, fontSize: 22, fontWeight: 700, color: C.amber, lineHeight: 1 }}>${totalConfirmed}K</div>
+            </GlassCard>
+            <GlassCard style={{ padding: "16px 22px", flex: 1, minWidth: 180 }}>
+              <div style={{ fontFamily: mn, fontSize: 10, color: "#4ADE80", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>Paid</div>
+              <div style={{ fontFamily: mn, fontSize: 22, fontWeight: 700, color: "#4ADE80", lineHeight: 1 }}>${totalPaid}K</div>
+              {totalConfirmed > 0 && (
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, marginTop: 4 }}>
+                  {Math.round((totalPaid / totalConfirmed) * 100)}% of confirmed
+                </div>
+              )}
+            </GlassCard>
+          </div>
+
+          {/* View toggle: To Activate / Activated */}
+          <div style={{ display: "inline-flex", gap: 4, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: 4, marginBottom: 20 }}>
+            {[
+              { key: "to-activate" as const, label: `To Activate (${toActivate.length})` },
+              { key: "activated" as const, label: `Activated (${activated.length})` },
+            ].map(v => (
+              <button key={v.key} onClick={() => setView(v.key)} style={{
+                fontFamily: ft, fontSize: 13, fontWeight: view === v.key ? 800 : 600,
+                color: view === v.key ? "#060608" : C.txm,
+                background: view === v.key ? `linear-gradient(135deg, ${col}, ${col}cc)` : "transparent",
+                border: "none", borderRadius: 10, padding: "10px 22px", cursor: "pointer",
+              }}>{v.label}</button>
+            ))}
+          </div>
+
+          {/* Pipeline rows */}
+          {loading ? (
+            <div style={{ fontFamily: mn, fontSize: 13, color: C.txd, padding: "40px 0" }}>Loading pipeline...</div>
+          ) : rows.length === 0 ? (
+            <GlassCard style={{ padding: "40px 24px", textAlign: "center" }}>
+              <div style={{ fontFamily: ft, fontSize: 15, color: C.txm }}>
+                {view === "activated" ? "No finalized events yet for this company." : "All events for this company are finalized."}
+              </div>
+            </GlassCard>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {rows.map(ev => {
+                const entry = entryFor(ev.name);
+                const stage = PIPELINE_STAGES.find(s => s.key === entry.status)!;
+                const savingThis = savingKey === `${company}:${ev.name}`;
+                return (
+                  <PipelineRow
+                    key={ev.name}
+                    ev={ev}
+                    entry={entry}
+                    stage={stage}
+                    saving={savingThis}
+                    onChange={(patch) => patchEntry(ev.name, patch)}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PipelineRow({ ev, entry, stage, saving, onChange }: {
+  ev: any;
+  entry: PipelineEntry;
+  stage: { key: PipelineStatus; label: string; short: string; color: string; description: string };
+  saving: boolean;
+  onChange: (patch: Partial<PipelineEntry>) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [localBudget, setLocalBudget] = useState(entry.budget);
+  const [localNotes, setLocalNotes] = useState(entry.notes || "");
+
+  useEffect(() => {
+    setLocalBudget(entry.budget);
+    setLocalNotes(entry.notes || "");
+  }, [entry.budget.proposed, entry.budget.confirmed, entry.budget.paid, entry.notes]);
+
+  return (
+    <div style={{
+      background: C.glass, backdropFilter: "blur(20px)",
+      border: `1px solid ${expanded ? stage.color + "40" : C.glassBorder}`,
+      borderLeft: `3px solid ${stage.color}`,
+      borderRadius: 14, overflow: "hidden", transition: "all 0.3s ease",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 20px" }}>
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.glassBorder}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+          <img src={ev.logo} alt={ev.name} style={{ width: 22, height: 22, objectFit: "contain", filter: ev.logo.endsWith(".svg") ? "brightness(0) invert(1)" : "none" }} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: ft, fontSize: 14, fontWeight: 700, color: C.tx }}>{ev.name}</div>
+          <div style={{ fontFamily: mn, fontSize: 10, color: C.txd }}>{ev.dates}</div>
+        </div>
+
+        {/* Stage picker */}
+        <select
+          value={entry.status}
+          onChange={(e) => onChange({ status: e.target.value as PipelineStatus })}
+          style={{
+            fontFamily: mn, fontSize: 11, fontWeight: 700,
+            color: stage.color, background: stage.color + "15",
+            border: `1px solid ${stage.color}40`, borderRadius: 20,
+            padding: "6px 14px", cursor: "pointer",
+            appearance: "none", outline: "none", minWidth: 160,
+          }}
+        >
+          {PIPELINE_STAGES.map(s => (
+            <option key={s.key} value={s.key} style={{ background: C.bg, color: C.tx }}>{s.label}</option>
+          ))}
+        </select>
+
+        {/* Quick budget readout */}
+        <div style={{ fontFamily: mn, fontSize: 11, color: C.txd, minWidth: 120, textAlign: "right" }}>
+          ${entry.budget.paid}K / ${entry.budget.confirmed}K
+        </div>
+
+        <button onClick={() => setExpanded(!expanded)} style={{ background: "none", border: `1px solid ${C.glassBorder}`, color: C.txm, fontFamily: mn, fontSize: 10, padding: "6px 12px", borderRadius: 8, cursor: "pointer" }}>
+          {expanded ? "Close" : "Edit"}
+        </button>
+      </div>
+
+      {expanded && (
+        <div style={{ padding: "16px 20px 18px", borderTop: `1px solid ${C.glassBorder}`, background: "rgba(0,0,0,0.15)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 14 }}>
+            {(["proposed", "confirmed", "paid"] as const).map(field => (
+              <div key={field}>
+                <div style={{ fontFamily: mn, fontSize: 9, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>{field} ($K)</div>
+                <input
+                  type="number"
+                  value={localBudget[field]}
+                  onChange={(e) => setLocalBudget({ ...localBudget, [field]: Number(e.target.value) || 0 })}
+                  onBlur={() => {
+                    if (localBudget[field] !== entry.budget[field]) {
+                      onChange({ budget: localBudget });
+                    }
+                  }}
+                  style={{
+                    width: "100%", padding: "8px 12px",
+                    background: "rgba(255,255,255,0.03)",
+                    border: `1px solid ${C.glassBorder}`, borderRadius: 8,
+                    color: C.tx, fontFamily: mn, fontSize: 13, outline: "none", boxSizing: "border-box",
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div style={{ fontFamily: mn, fontSize: 9, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>Notes</div>
+          <textarea
+            value={localNotes}
+            onChange={(e) => setLocalNotes(e.target.value)}
+            onBlur={() => {
+              if (localNotes !== (entry.notes || "")) {
+                onChange({ notes: localNotes });
+              }
+            }}
+            rows={2}
+            placeholder="Deal context, next steps, blockers..."
+            style={{
+              width: "100%", padding: "8px 12px",
+              background: "rgba(255,255,255,0.03)",
+              border: `1px solid ${C.glassBorder}`, borderRadius: 8,
+              color: C.tx, fontFamily: ft, fontSize: 13, outline: "none", boxSizing: "border-box", resize: "vertical",
+            }}
+          />
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12, gap: 10, flexWrap: "wrap" }}>
+            <div style={{ fontFamily: mn, fontSize: 10, color: C.txd }}>
+              {stage.description} {saving && <span style={{ color: C.amber, marginLeft: 8 }}>Saving…</span>}
+            </div>
+            <div style={{ fontFamily: mn, fontSize: 10, color: C.txd }}>
+              Last updated: {new Date(entry.lastUpdated).toLocaleString()}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SponsorRevenue({ company }: { company: string }) {
+  const [pipelines, setPipelines] = useState<Record<string, CompanyPipeline>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/pipeline").then(r => r.json()).then(d => {
+      setPipelines(d.pipelines || {});
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  const relevantCompanies = company === "All" ? COMPANIES.map(c => c.name) : [company];
+
+  type Roll = { proposed: number; confirmed: number; paid: number; finalizedCount: number; inPipelineCount: number };
+  const roll = (cnames: string[]): Roll => {
+    let proposed = 0, confirmed = 0, paid = 0, finalizedCount = 0, inPipelineCount = 0;
+    cnames.forEach(cn => {
+      const p = pipelines[cn] || {};
+      Object.values(p).forEach(e => {
+        proposed += e.budget?.proposed || 0;
+        confirmed += e.budget?.confirmed || 0;
+        paid += e.budget?.paid || 0;
+        if (e.status === "finalized") finalizedCount++;
+        else if (e.status !== "proposed") inPipelineCount++;
+      });
+    });
+    return { proposed, confirmed, paid, finalizedCount, inPipelineCount };
+  };
+
+  const totals = roll(relevantCompanies);
+  const pctPaid = totals.confirmed > 0 ? Math.round((totals.paid / totals.confirmed) * 100) : 0;
+  const pctConfirmed = totals.proposed > 0 ? Math.round((totals.confirmed / totals.proposed) * 100) : 0;
+
+  // Per-company breakdown (for All view)
+  const perCompany = COMPANIES.map(c => ({ name: c.name, color: c.color, ...roll([c.name]) }));
+
+  return (
+    <section style={{ padding: "40px 32px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeIn>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <SectionLabel>Sponsor Revenue</SectionLabel>
+            <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "2px 8px", letterSpacing: "1px" }}>INTERNAL</span>
+          </div>
+          <SectionTitle>Pipeline Value {company !== "All" ? `— ${company}` : ""}</SectionTitle>
+        </FadeIn>
+
+        {loading ? (
+          <div style={{ fontFamily: mn, fontSize: 13, color: C.txd, padding: "30px 0" }}>Loading pipeline...</div>
+        ) : (
+          <>
+            {/* Headline totals */}
+            <div data-grid-responsive style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 20, marginBottom: 20 }}>
+              <GlassCard style={{ padding: "22px 24px", borderLeft: `3px solid ${C.txm}` }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Proposed</div>
+                <div style={{ fontFamily: gf, fontSize: 36, fontWeight: 900, color: C.tx, lineHeight: 1, letterSpacing: "-1.5px" }}>${totals.proposed}K</div>
+                <div style={{ fontFamily: mn, fontSize: 11, color: C.txm, marginTop: 6 }}>Target ask</div>
+              </GlassCard>
+              <GlassCard style={{ padding: "22px 24px", borderLeft: `3px solid ${C.amber}` }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Confirmed</div>
+                <div style={{ fontFamily: gf, fontSize: 36, fontWeight: 900, color: C.amber, lineHeight: 1, letterSpacing: "-1.5px" }}>${totals.confirmed}K</div>
+                <div style={{ fontFamily: mn, fontSize: 11, color: C.txm, marginTop: 6 }}>{pctConfirmed}% of proposed</div>
+              </GlassCard>
+              <GlassCard style={{ padding: "22px 24px", borderLeft: `3px solid #4ADE80` }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: "#4ADE80", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Paid</div>
+                <div style={{ fontFamily: gf, fontSize: 36, fontWeight: 900, color: "#4ADE80", lineHeight: 1, letterSpacing: "-1.5px" }}>${totals.paid}K</div>
+                <div style={{ fontFamily: mn, fontSize: 11, color: C.txm, marginTop: 6 }}>{pctPaid}% of confirmed received</div>
+              </GlassCard>
+            </div>
+
+            {/* Deal count strip */}
+            <GlassCard style={{ padding: "18px 24px", marginBottom: 20, display: "flex", gap: 32, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 4 }}>In pipeline</div>
+                <div style={{ fontFamily: gf, fontSize: 26, fontWeight: 900, color: C.amber, lineHeight: 1 }}>{totals.inPipelineCount}</div>
+              </div>
+              <div>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 4 }}>Finalized deals</div>
+                <div style={{ fontFamily: gf, fontSize: 26, fontWeight: 900, color: "#4ADE80", lineHeight: 1 }}>{totals.finalizedCount}</div>
+              </div>
+              {totals.confirmed > 0 && (
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>Collection progress</div>
+                  <div style={{ width: "100%", height: 10, background: "rgba(255,255,255,0.04)", borderRadius: 5, overflow: "hidden" }}>
+                    <div style={{ width: `${pctPaid}%`, height: "100%", background: "linear-gradient(90deg, #4ADE80, #22C55E)" }} />
+                  </div>
+                  <div style={{ fontFamily: mn, fontSize: 10, color: C.txm, marginTop: 4 }}>${totals.paid}K of ${totals.confirmed}K collected</div>
+                </div>
+              )}
+            </GlassCard>
+
+            {/* Per-company breakdown, only in All view */}
+            {company === "All" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ fontFamily: mn, fontSize: 10, color: C.amber, letterSpacing: "2px", textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>Per-company breakdown</div>
+                {perCompany.map(pc => {
+                  const companyPctPaid = pc.confirmed > 0 ? Math.round((pc.paid / pc.confirmed) * 100) : 0;
+                  return (
+                    <GlassCard key={pc.name} style={{ padding: "16px 22px", borderLeft: `3px solid ${pc.color}` }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                        <span style={{ fontFamily: mn, fontSize: 10, color: pc.color, background: pc.color + "15", border: `1px solid ${pc.color}30`, borderRadius: 20, padding: "4px 12px", letterSpacing: "1px", fontWeight: 700, minWidth: 90, textAlign: "center" }}>{pc.name}</span>
+                        <div style={{ display: "flex", gap: 20, fontFamily: mn, fontSize: 12, color: C.txm }}>
+                          <span>Proposed <span style={{ color: C.tx, fontWeight: 700 }}>${pc.proposed}K</span></span>
+                          <span>Confirmed <span style={{ color: C.amber, fontWeight: 700 }}>${pc.confirmed}K</span></span>
+                          <span>Paid <span style={{ color: "#4ADE80", fontWeight: 700 }}>${pc.paid}K</span></span>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 120 }}>
+                          <div style={{ width: "100%", height: 4, background: "rgba(255,255,255,0.04)", borderRadius: 2, overflow: "hidden" }}>
+                            <div style={{ width: `${companyPctPaid}%`, height: "100%", background: pc.color }} />
+                          </div>
+                        </div>
+                        <div style={{ fontFamily: mn, fontSize: 10, color: C.txd, minWidth: 60, textAlign: "right" }}>
+                          {pc.finalizedCount} signed
+                        </div>
+                      </div>
+                    </GlassCard>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function InternalAnalyticsTab() {
   const [company, setCompany] = useState<string>("All");
   return (
@@ -2844,6 +3247,7 @@ function InternalAnalyticsTab() {
       <GradientMesh />
       <div style={{ position: "relative", zIndex: 1, paddingTop: 80 }}>
         <CompanySelector company={company} setCompany={setCompany} />
+        <SponsorRevenue company={company} />
         <SubmissionsViewer />
         <EngagementFunnel company={company} />
         <RecentActivity company={company} />
@@ -3406,11 +3810,10 @@ export default function InternalClient() {
         borderBottom: `1px solid ${C.glassBorder}`,
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <img src="/images/events/semianalysis.png" alt="SemiAnalysis" style={{ height: 22, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
-          <span style={{ color: C.txd, fontSize: 20, fontWeight: 200 }}>{"\u00D7"}</span>
-          <img src="/images/events/aws.svg" alt="AWS" style={{ height: 18, objectFit: "contain" }} />
-          <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "3px 10px", letterSpacing: "1px", fontWeight: 700, marginLeft: 8 }}>INTERNAL</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <img src="/images/events/semianalysis.png" alt="SemiAnalysis" style={{ height: 28, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
+          <span style={{ fontFamily: gf, fontSize: 26, fontWeight: 900, color: C.tx, letterSpacing: "-0.5px", lineHeight: 1 }}>Activations</span>
+          <span style={{ fontFamily: mn, fontSize: 9, color: C.coral, background: C.coral + "15", border: `1px solid ${C.coral}30`, borderRadius: 20, padding: "3px 10px", letterSpacing: "1px", fontWeight: 700, marginLeft: 4 }}>INTERNAL</span>
         </div>
 
         <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 3 }}>
@@ -3445,7 +3848,7 @@ export default function InternalClient() {
         </div>
       </nav>
 
-      {active === 0 ? <OverviewTab internal={true} /> : active === 1 ? <CalendarTab /> : active === 2 ? <InternalAnalyticsTab /> : <InternalOpsTab />}
+      {active === 0 ? <PipelineTab /> : active === 1 ? <CalendarTab /> : active === 2 ? <InternalAnalyticsTab /> : <InternalOpsTab />}
     </>
   );
 }
