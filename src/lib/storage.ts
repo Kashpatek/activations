@@ -8,14 +8,6 @@ const hasKV =
   !!process.env.KV_REST_API_URL &&
   !!process.env.KV_REST_API_TOKEN;
 
-export const storageDiagnostic = {
-  hasKV,
-  url: !!process.env.KV_REST_API_URL,
-  token: !!process.env.KV_REST_API_TOKEN,
-  kvUrl: !!process.env.KV_URL,
-  redisUrl: !!process.env.REDIS_URL,
-};
-
 async function kv() {
   if (!hasKV) return null;
   const mod = await import("@vercel/kv");
