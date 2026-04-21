@@ -161,7 +161,6 @@ const TOC_ITEMS = [
   { id: "track-record", label: "Track Record" },
   { id: "why", label: "Why Us" },
   { id: "benefits", label: "Benefits" },
-  { id: "tiers", label: "Tiers" },
   { id: "strategize", label: "Strategize" },
   { id: "close", label: "Why Now" },
   { id: "cta", label: "Partner" },
@@ -943,41 +942,7 @@ function OverviewTab({ internal }: { internal: boolean }) {
         </section>
 
         <GlowDivider color={C.coral} />
-        {/* ─── INVESTMENT TIERS ─── */}
-        <section id="tiers" style={{ padding: "80px 32px", maxWidth: 1100, margin: "0 auto" }}>
-          <FadeIn>
-            <SectionLabel>Investment</SectionLabel>
-            <SectionTitle>Partnership Tiers</SectionTitle>
-            <p style={{ fontFamily: ft, fontSize: 17, color: C.txm, lineHeight: 1.7, maxWidth: 600, marginBottom: 48 }}>Flexible partnership structures designed to match your goals — from targeted single-event activations to full-season presenting partnerships.</p>
-          </FadeIn>
-
-          <div data-grid-responsive style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-            {tiers.map((t, i) => (
-              <FadeIn key={t.tier} delay={i * 100}>
-                <div style={{
-                  background: t.highlight ? `linear-gradient(135deg, ${C.amber}0A, ${C.blue}08)` : C.glass,
-                  backdropFilter: "blur(20px)",
-                  border: t.highlight ? `1px solid ${C.amber}30` : `1px solid ${C.glassBorder}`,
-                  borderRadius: 20, padding: "32px 24px", height: "100%",
-                  boxShadow: t.highlight ? `0 8px 40px ${C.amber}10` : undefined,
-                  position: "relative", overflow: "hidden",
-                }}>
-                  {t.highlight && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${C.amber}, ${C.blue})` }} />}
-                  <div style={{ fontFamily: gf, fontSize: 28, fontWeight: 900, color: t.highlight ? C.amber : C.tx, marginBottom: 4 }}>{t.tier}</div>
-                  <div style={{ fontFamily: ft, fontSize: 14, color: C.txm, marginBottom: 24 }}>{t.desc}</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {t.features.map((f, fi) => (
-                      <div key={fi} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                        <div style={{ fontFamily: mn, fontSize: 12, color: t.highlight ? C.amber : C.teal, marginTop: 1 }}>{"\u2713"}</div>
-                        <div style={{ fontFamily: ft, fontSize: 13, color: C.txm, lineHeight: 1.5 }}>{f}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </section>
+        {/* ─── INVESTMENT TIERS (hidden — Budget Strategizer below covers this) ─── */}
 
         {/* ─── BUDGET STRATEGIZER ─── */}
         <BudgetStrategizer />
